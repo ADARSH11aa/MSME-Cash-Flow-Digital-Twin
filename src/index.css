@@ -18,6 +18,24 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Lenis smooth scrolling engine support */
+  html.lenis, html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
   }
 
   body {
@@ -37,8 +55,7 @@
     letter-spacing: -0.02em;
   }
 
-  /* PRD 2.2: any currency or date in a table/list aligns on tabular numerals.
-     Applied structurally rather than per-component so no table can forget it. */
+  /* PRD 2.2: any currency or date in a table/list aligns on tabular numerals. */
   table,
   td,
   th,
@@ -46,8 +63,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* PRD Section 7: visible keyboard focus everywhere, from day one.
-     :focus-visible only, so mouse users don't see rings on click. */
+  /* PRD Section 7: visible keyboard focus everywhere */
   :focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
@@ -66,16 +82,19 @@
 }
 
 @layer utilities {
-  /* Scroll-reveal helper used by section wrappers that opt out of Framer
-     Motion. Pairs with the tokenized duration so reduced-motion collapses it. */
   .reveal {
     animation: reveal-up var(--motion-reveal-duration) var(--ease-out) both;
   }
+
+  /* GPU layer promotion for silky 60fps animations */
+  .gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+  }
 }
 
-/* PRD 2.4 / Section 7: global reduced-motion backstop. Framer Motion is also
-   guarded per-component via useReducedMotion, but this catches CSS animation
-   and any third-party (Recharts) transitions. Opacity fades are preserved. */
+/* Global reduced-motion backstop */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import {
   Boxes,
   GitBranch,
@@ -7,63 +9,196 @@ import {
   Users,
 } from 'lucide-react';
 import EyebrowLabel from '@/components/shared/EyebrowLabel';
-import Reveal from './Reveal';
 
-/** Core modules grid (PRD 3.1.6), in the reference's capability-card style. */
+/**
+ * Core modules grid (PRD 3.1.6) — enhanced with multi-column parallax scrolling,
+ * ambient glow depth, and bi-directional text reveal animations.
+ */
 
 const MODULES = [
   {
     Icon: LineChart,
     title: 'Cash-flow forecasting',
-    body: 'Projects your position 7 to 90 days ahead from real invoices and obligations.',
+    body: 'Projects your liquidity 7 to 90 days ahead from real invoices and verified obligations.',
+    col: 0,
   },
   {
     Icon: Users,
     title: 'Payment behaviour intelligence',
-    body: 'Learns how late each customer actually pays, rather than trusting agreed terms.',
+    body: 'Learns how late each buyer actually pays, rather than blindly trusting stated terms.',
+    col: 1,
   },
   {
     Icon: Boxes,
     title: 'Customer concentration risk',
-    body: 'Flags when too much of your cash depends on one buyer settling on time.',
+    body: 'Flags when too much of your cash depends on one single customer settling on time.',
+    col: 2,
   },
   {
     Icon: GitBranch,
     title: 'Liquidity recovery simulator',
-    body: 'Tests shocks and recovery actions side by side before you commit to either.',
+    body: 'Tests revenue shocks and non-debt recovery actions side-by-side before committing.',
+    col: 0,
   },
   {
     Icon: ShieldQuestion,
-    title: 'Explainable recommendations',
-    body: 'Every figure opens up into the invoices and payments that produced it.',
+    title: 'Explainable calculations',
+    body: 'Every headline figure opens up into the source invoices and records that produced it.',
+    col: 1,
   },
   {
     Icon: PencilRuler,
-    title: 'Correctable financial AI',
-    body: 'Wrong import? Fix the value and the whole forecast recalculates immediately.',
+    title: 'Correctable financial model',
+    body: 'Wrong OCR import? Edit any amount inline and your forecast recalculates immediately.',
+    col: 2,
   },
 ];
 
-export default function ModulesGrid() {
-  return (
-    <section id="modules" className="border-b border-edge-dark py-20 md:py-28">
-      <div className="mx-auto max-w-6xl px-5 md:px-8">
-        <Reveal>
-          <EyebrowLabel>Core capabilities</EyebrowLabel>
-          <h2 className="mt-6 max-w-2xl font-display text-[32px] leading-tight tracking-[-0.02em] text-chalk-hi md:text-display-lg">
-            Six modules, one cash position
-          </h2>
-        </Reveal>
+const HEADLINE_TEXT = 'Six modules, one living cash position';
+const SUBHEAD_TEXT =
+  'Everything your business needs to stay ahead of upcoming cash-flow roadblocks.';
 
-        <div className="mt-14 grid gap-px border border-edge-dark bg-edge-dark sm:grid-cols-2 lg:grid-cols-3">
+export default function ModulesGrid() {
+  const containerRef = useRef(null);
+  const prefersReduced = useReducedMotion();
+
+  // Scroll tracking for parallax depth
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start end', 'end start'],
+  });
+
+  // Parallax shifts for multi-column depth effect
+  const col0Y = useTransform(scrollYProgress, [0, 1], [30, -30]);
+  const col1Y = useTransform(scrollYProgress, [0, 1], [10, -10]);
+  const col2Y = useTransform(scrollYProgress, [0, 1], [-10, 20]);
+  const glowY = useTransform(scrollYProgress, [0, 1], [60, -60]);
+  const glowOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.05, 0.2, 0.05]);
+
+  // Header animation variants (bi-directional on scroll up & down)
+  const headerContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.04,
+        delayChildren: 0.05,
+      },
+    },
+  };
+
+  const wordVariants = {
+    hidden: { opacity: 0, y: 14, filter: 'blur(3px)' },
+    visible: {
+      opacity: 1,
+      y: 0,
+      filter: 'blur(0px)',
+      transition: {
+        duration: 0.45,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
+  const getColTransform = (colIndex) => {
+    if (prefersReduced) return undefined;
+    if (colIndex === 0) return col0Y;
+    if (colIndex === 1) return col1Y;
+    return col2Y;
+  };
+
+  return (
+    <section
+      id="modules"
+      ref={containerRef}
+      className="relative overflow-hidden border-b border-edge-dark py-20 md:py-28 bg-void"
+    >
+      {/* Parallax Ambient Radial Glow */}
+      <motion.div
+        style={{ y: prefersReduced ? 0 : glowY, opacity: prefersReduced ? 0.1 : glowOpacity }}
+        className="pointer-events-none absolute right-1/4 -top-20 h-96 w-96 rounded-full bg-lime blur-[130px]"
+        aria-hidden="true"
+      />
+
+      <div className="relative mx-auto max-w-6xl px-5 md:px-8">
+        {/* Bi-directional Header Text Reveal */}
+        <motion.div
+          variants={headerContainerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: false, amount: 0.3 }}
+        >
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, y: 10 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+            }}
+          >
+            <EyebrowLabel>Core capabilities</EyebrowLabel>
+          </motion.div>
+
+          <motion.h2 className="mt-6 max-w-2xl font-display text-[34px] leading-tight tracking-[-0.02em] text-chalk-hi md:text-display-lg">
+            {HEADLINE_TEXT.split(' ').map((word, i) => (
+              <motion.span
+                key={`${word}-${i}`}
+                variants={wordVariants}
+                className="inline-block mr-[0.25em]"
+              >
+                {word}
+              </motion.span>
+            ))}
+          </motion.h2>
+
+          <motion.p
+            variants={{
+              hidden: { opacity: 0, y: 8 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.4, delay: 0.25 } },
+            }}
+            className="mt-4 max-w-xl text-body-md text-chalk-lo leading-relaxed"
+          >
+            {SUBHEAD_TEXT}
+          </motion.p>
+        </motion.div>
+
+        {/* 6 Capabilities Cards Grid with Multi-Column Parallax */}
+        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {MODULES.map((module, i) => (
-            <Reveal key={module.title} index={i} className="bg-surface">
-              <div className="group h-full p-7 transition-colors hover:bg-surface-2">
-                <module.Icon className="h-6 w-6 text-lime" aria-hidden="true" />
-                <h3 className="mt-6 font-display text-heading-md text-chalk-hi">{module.title}</h3>
-                <p className="mt-2.5 text-body-sm text-chalk-lo">{module.body}</p>
+            <motion.div
+              key={module.title}
+              style={{ y: getColTransform(module.col) }}
+              initial={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{
+                duration: prefersReduced ? 0.01 : 0.5,
+                delay: prefersReduced ? 0 : (i % 3) * 0.12,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="group flex h-full flex-col justify-between rounded-2xl border border-edge-dark/80 bg-surface p-7 transition-all hover:border-lime/50 hover:bg-surface-2 hover:shadow-2xl shadow-sm"
+            >
+              <div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-16 border border-lime/20 text-lime transition-transform group-hover:scale-110">
+                  <module.Icon className="h-6 w-6" aria-hidden="true" />
+                </div>
+
+                <h3 className="mt-6 font-display text-heading-md font-semibold text-chalk-hi leading-snug">
+                  {module.title}
+                </h3>
+
+                <p className="mt-3 text-body-sm text-chalk-lo leading-relaxed">
+                  {module.body}
+                </p>
               </div>
-            </Reveal>
+
+              {/* Bottom Subtle Status Line */}
+              <div className="mt-6 pt-4 border-t border-edge-dark/50 flex items-center justify-between text-[11px] text-chalk-lo group-hover:text-chalk-hi transition-colors">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <span className="h-1.5 w-1.5 rounded-full bg-lime" /> Active Signal
+                </span>
+                <span className="font-mono text-[10px] text-chalk-lo/60">MOD 0{i + 1}</span>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>

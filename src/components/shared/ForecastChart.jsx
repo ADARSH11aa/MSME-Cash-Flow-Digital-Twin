@@ -14,14 +14,7 @@ import { formatCurrency, formatCurrencyShort, formatDateShort, formatDateLong } 
 
 /**
  * The cash-flow forecast chart (PRD 2.5 / 3.4.3): three overlaid bands, a
- * "today" marker and a minimum-buffer threshold line.
- *
- * Also serves the scenario screen (PRD 3.5) via `baseline`, which draws the
- * pre-scenario expected line dashed and dimmed behind the new one.
- *
- * The band colors are semantic — pessimistic is the risk red, so the shape of
- * the downside is readable at a glance — and the chart carries an aria-label
- * summarising its headline so it is not opaque to a screen reader (Section 7).
+ * "today" marker and a minimum-buffer threshold line, with smooth line drawing animation.
  *
  * @param {{
  *   forecast: Array<{ date: string, optimistic: number, expected: number, pessimistic: number }>,
@@ -32,6 +25,7 @@ import { formatCurrency, formatCurrencyShort, formatDateShort, formatDateLong } 
  *   height?: number,
  *   ariaSummary?: string,
  *   className?: string,
+ *   animate?: boolean,
  * }} props
  */
 export default function ForecastChart({
@@ -42,6 +36,7 @@ export default function ForecastChart({
   height = 320,
   ariaSummary,
   className,
+  animate = true,
 }) {
   // Merge the baseline series in by date so both lines share one x-axis.
   const data = forecast.map((point, index) => ({
@@ -108,8 +103,7 @@ export default function ForecastChart({
             }}
           />
 
-          {/* "Today" sits on the first data point, so its label is pushed down
-              and right to clear the y-axis ticks it would otherwise overlap. */}
+          {/* "Today" sits on the first data point */}
           {todayDate ? (
             <ReferenceLine
               x={todayDate}
@@ -135,7 +129,9 @@ export default function ForecastChart({
             fill="url(#fill-optimistic)"
             dot={false}
             activeDot={false}
-            isAnimationActive={false}
+            isAnimationActive={animate}
+            animationDuration={1200}
+            animationEasing="ease-out"
             name="Optimistic"
           />
           <Area
@@ -146,7 +142,9 @@ export default function ForecastChart({
             fill="url(#fill-pessimistic)"
             dot={false}
             activeDot={false}
-            isAnimationActive={false}
+            isAnimationActive={animate}
+            animationDuration={1500}
+            animationEasing="ease-out"
             name="Pessimistic"
           />
           <Area
@@ -157,7 +155,9 @@ export default function ForecastChart({
             fill="url(#fill-expected)"
             dot={false}
             activeDot={{ r: 4, fill: 'var(--viz-expected)' }}
-            isAnimationActive={false}
+            isAnimationActive={animate}
+            animationDuration={1350}
+            animationEasing="ease-out"
             name="Expected"
           />
 
@@ -170,7 +170,9 @@ export default function ForecastChart({
               strokeWidth={1.5}
               strokeDasharray="5 4"
               dot={false}
-              isAnimationActive={false}
+              isAnimationActive={animate}
+              animationDuration={1100}
+              animationEasing="ease-out"
               name="Before scenario"
             />
           ) : null}
@@ -186,8 +188,7 @@ export default function ForecastChart({
 }
 
 /**
- * Tooltip showing the day's breakdown — a compact preview of the lineage view
- * (PRD 3.4.3). Every figure carries `data-numeric` so the columns align.
+ * Tooltip showing the day's breakdown
  */
 function ForecastTooltip({ active, payload, label, minimumBuffer, hasBaseline }) {
   if (!active || !payload?.length) return null;
@@ -207,7 +208,7 @@ function ForecastTooltip({ active, payload, label, minimumBuffer, hasBaseline })
   ];
 
   return (
-    <div className="min-w-[220px] border border-edge-dark bg-surface-2 p-3 shadow-card-dark">
+    <div className="min-w-[220px] rounded-xl border border-edge-dark bg-surface-2 p-3 shadow-card-dark">
       <p className="mb-2 text-label-xs uppercase text-chalk-lo">{formatDateLong(label)}</p>
 
       <dl className="space-y-1.5">
@@ -231,7 +232,7 @@ function ForecastTooltip({ active, payload, label, minimumBuffer, hasBaseline })
       </dl>
 
       {belowBuffer ? (
-        <p className="mt-2 border-t border-edge-dark pt-2 text-label-xs uppercase text-risk">
+        <p className="mt-2 border-t border-edge-dark pt-2 text-label-xs uppercase text-risk font-semibold">
           Below minimum buffer
         </p>
       ) : null}
