@@ -1,12 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent, useReducedMotion } from 'framer-motion';
 import cn from '@/lib/cn';
 import EyebrowLabel from '@/components/shared/EyebrowLabel';
-import Reveal from './Reveal';
 
 /**
- * How it works (PRD 3.1.5) — a genuine sequence, so numbering is justified.
- * Uses the reference's left-list / right-media layout with the list acting as
- * a selector for the panel beside it.
+ * How it works (PRD 3.1.5) — enhanced with bi-directional header reveal animation
+ * on scrolling up and down, and automatic sticky slideshow progression.
  */
 
 const STEPS = [
@@ -36,66 +35,191 @@ const STEPS = [
   },
 ];
 
+const HEADLINE_TEXT = 'Everything your cash position runs on';
+
 export default function HowItWorks() {
   const [active, setActive] = useState(0);
+  const containerRef = useRef(null);
+  const prefersReduced = useReducedMotion();
+
+  // Scroll tracking for sticky automatic slideshow progression
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start start', 'end end'],
+  });
+
+  useMotionValueEvent(scrollYProgress, 'change', (latest) => {
+    if (prefersReduced) return;
+    const stepCount = STEPS.length;
+    // Map scroll progress (0 to 1) across the 4 steps
+    const index = Math.min(stepCount - 1, Math.max(0, Math.floor(latest * stepCount)));
+    setActive((prev) => (prev !== index ? index : prev));
+  });
+
   const step = STEPS[active];
 
+  // Header animation variants (bi-directional on scroll up & down)
+  const headerContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: 0.05,
+      },
+    },
+  };
+
+  const wordVariants = {
+    hidden: { opacity: 0, y: 14, filter: 'blur(3px)' },
+    visible: {
+      opacity: 1,
+      y: 0,
+      filter: 'blur(0px)',
+      transition: {
+        duration: 0.45,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
   return (
-    <section id="how-it-works" className="border-b border-edge-dark py-20 md:py-28">
-      <div className="mx-auto max-w-6xl px-5 md:px-8">
-        <Reveal>
-          <EyebrowLabel>How it works</EyebrowLabel>
-          <h2 className="mt-6 max-w-2xl font-display text-[32px] leading-tight tracking-[-0.02em] text-chalk-hi md:text-display-lg">
-            Everything your cash position runs on
-          </h2>
-        </Reveal>
-
-        <div className="mt-14 grid gap-8 lg:grid-cols-[minmax(0,340px)_1fr]">
-          <ol className="space-y-0">
-            {STEPS.map((s, i) => (
-              <li key={s.n}>
-                <button
-                  type="button"
-                  onClick={() => setActive(i)}
-                  aria-current={i === active}
-                  className={cn(
-                    'flex w-full items-center gap-3 border-b py-4 text-left transition-colors',
-                    i === active
-                      ? 'border-chalk-hi text-chalk-hi'
-                      : 'border-edge-dark text-chalk-lo hover:text-chalk-hi',
-                  )}
+    <section
+      id="how-it-works"
+      ref={containerRef}
+      className="relative border-b border-edge-dark pb-24"
+    >
+      {/* Scroll track height to give smooth progressive scroll distance */}
+      <div className="relative min-h-[220vh] md:min-h-[260vh]">
+        {/* Sticky viewport content */}
+        <div className="sticky top-20 md:top-24 flex min-h-[calc(100vh-6rem)] flex-col justify-center py-8">
+          <div className="mx-auto w-full max-w-6xl px-5 md:px-8">
+            {/* Bi-directional Header Animation (Works on scroll up & down) */}
+            <motion.div
+              variants={headerContainerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false, amount: 0.3 }}
+            >
+              <div className="flex items-center justify-between">
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 10 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+                  }}
                 >
-                  <span
-                    className={cn('h-1.5 w-1.5 shrink-0', i === active ? 'bg-lime' : 'bg-chalk-lo')}
-                    aria-hidden="true"
-                  />
-                  <span data-numeric className="text-label-xs uppercase tabular">
-                    {s.n}
-                  </span>
-                  <span className="text-label-xs uppercase">{s.title}</span>
-                </button>
-              </li>
-            ))}
-          </ol>
+                  <EyebrowLabel>How it works</EyebrowLabel>
+                </motion.div>
 
-          <div className="grid gap-0 border border-edge-dark bg-surface md:grid-cols-2">
-            <div className="flex flex-col justify-between gap-8 p-7">
-              <div>
-                <h3 className="font-display text-display-md text-chalk-hi">{step.title}</h3>
-                <p className="mt-4 text-body-md text-chalk-lo">{step.body}</p>
+                {/* Scroll progress pill */}
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, scale: 0.9 },
+                    visible: { opacity: 1, scale: 1, transition: { duration: 0.35 } },
+                  }}
+                  className="hidden sm:flex items-center gap-2 rounded-full border border-edge-dark bg-surface-2 px-3 py-1 text-[11px] text-chalk-lo"
+                >
+                  <span>Scroll to advance</span>
+                  <span className="font-semibold text-lime">Stage {step.n} / 04</span>
+                </motion.div>
               </div>
-            </div>
 
-            <div className="flex flex-col justify-center gap-2.5 border-t border-edge-dark bg-void p-7 md:border-l md:border-t-0">
-              {step.panel.map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center gap-2.5 border border-edge-dark bg-surface px-3.5 py-2.5"
-                >
-                  <span className="h-1.5 w-1.5 shrink-0 bg-lime" aria-hidden="true" />
-                  <span className="text-body-sm text-chalk-hi">{item}</span>
-                </div>
-              ))}
+              {/* Staggered Words Headline */}
+              <motion.h2
+                className="mt-4 max-w-2xl font-display text-[32px] leading-tight tracking-[-0.02em] text-chalk-hi md:text-display-lg"
+              >
+                {HEADLINE_TEXT.split(' ').map((word, i) => (
+                  <motion.span key={`${word}-${i}`} variants={wordVariants} className="inline-block mr-[0.25em]">
+                    {word}
+                  </motion.span>
+                ))}
+              </motion.h2>
+            </motion.div>
+
+            <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,340px)_1fr] lg:items-center">
+              {/* Left Selector List */}
+              <ol className="space-y-2.5">
+                {STEPS.map((s, i) => (
+                  <li key={s.n}>
+                    <button
+                      type="button"
+                      onClick={() => setActive(i)}
+                      aria-current={i === active}
+                      className={cn(
+                        'group flex w-full items-center justify-between rounded-xl border p-4 text-left transition-all',
+                        i === active
+                          ? 'border-chalk-hi/90 bg-surface-2 shadow-xl text-chalk-hi ring-1 ring-white/10'
+                          : 'border-edge-dark/60 bg-surface/70 text-chalk-lo hover:border-edge-dark hover:text-chalk-hi'
+                      )}
+                    >
+                      <div className="flex items-center gap-4">
+                        <span
+                          className={cn(
+                            'flex h-7 w-7 items-center justify-center rounded-lg text-label-xs font-semibold tabular transition-colors',
+                            i === active ? 'bg-lime text-ink-hi' : 'border border-edge-dark bg-void text-chalk-lo'
+                          )}
+                        >
+                          {s.n}
+                        </span>
+                        <span className="text-body-sm font-semibold uppercase tracking-wider">{s.title}</span>
+                      </div>
+
+                      {/* Active indicator bar */}
+                      <span
+                        className={cn(
+                          'h-2 w-2 rounded-full transition-all',
+                          i === active ? 'bg-lime scale-125' : 'bg-transparent'
+                        )}
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </li>
+                ))}
+              </ol>
+
+              {/* Right Dynamic Showcase Panel */}
+              <div className="overflow-hidden rounded-2xl border border-edge-dark bg-surface shadow-2xl min-h-[340px]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={active}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="grid md:grid-cols-2 h-full"
+                  >
+                    {/* Stage Details */}
+                    <div className="flex flex-col justify-between gap-6 p-8 md:p-10">
+                      <div>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-lime-16 border border-lime/30 px-3 py-0.5 text-label-xs uppercase text-lime font-semibold">
+                          <span className="h-1.5 w-1.5 rounded-full bg-lime" /> Stage {step.n}
+                        </span>
+                        <h3 className="mt-3 font-display text-display-md text-chalk-hi">{step.title}</h3>
+                        <p className="mt-4 text-body-md text-chalk-lo leading-relaxed">{step.body}</p>
+                      </div>
+                    </div>
+
+                    {/* Active Output Signals */}
+                    <div className="flex flex-col justify-center gap-3 border-t border-edge-dark bg-surface-2 p-8 md:border-l md:border-t-0 md:p-10">
+                      <span className="text-label-xs uppercase text-chalk-lo mb-1 font-semibold tracking-wider">
+                        Active Output Signals
+                      </span>
+                      {step.panel.map((item, idx) => (
+                        <motion.div
+                          key={item}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.25, delay: idx * 0.06 }}
+                          className="flex items-center gap-3 rounded-xl border border-edge-dark bg-surface px-4 py-3 shadow-sm"
+                        >
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-lime" aria-hidden="true" />
+                          <span className="text-body-sm font-medium text-chalk-hi">{item}</span>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </div>
