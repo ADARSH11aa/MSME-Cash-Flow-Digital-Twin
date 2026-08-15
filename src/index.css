@@ -1,0 +1,88 @@
+/* -----------------------------------------------------------------------------
+   Fonts — PRD Section 2.2: Inter Tight (display) + Inter (body/numerals),
+   self-hosted through Fontsource so there is no external font request.
+   Variable axes cover the 400-700 range the type scale needs.
+   -------------------------------------------------------------------------- */
+@import '@fontsource-variable/inter-tight/index.css';
+@import '@fontsource-variable/inter/index.css';
+
+/* Design tokens must load before Tailwind so the theme's var() references
+   resolve against real values. */
+@import './styles/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--bg-void);
+    color: var(--text-onDark-hi);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* Display face for all headings — PRD 2.2. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  /* PRD 2.2: any currency or date in a table/list aligns on tabular numerals.
+     Applied structurally rather than per-component so no table can forget it. */
+  table,
+  td,
+  th,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* PRD Section 7: visible keyboard focus everywhere, from day one.
+     :focus-visible only, so mouse users don't see rings on click. */
+  :focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+    border-radius: 2px;
+  }
+
+  /* Skip-link target styling for the AppShell / MarketingLayout landmarks. */
+  [id='main'] {
+    scroll-margin-top: 96px;
+  }
+
+  ::selection {
+    background: var(--accent-lime);
+    color: var(--text-onLight-hi);
+  }
+}
+
+@layer utilities {
+  /* Scroll-reveal helper used by section wrappers that opt out of Framer
+     Motion. Pairs with the tokenized duration so reduced-motion collapses it. */
+  .reveal {
+    animation: reveal-up var(--motion-reveal-duration) var(--ease-out) both;
+  }
+}
+
+/* PRD 2.4 / Section 7: global reduced-motion backstop. Framer Motion is also
+   guarded per-component via useReducedMotion, but this catches CSS animation
+   and any third-party (Recharts) transitions. Opacity fades are preserved. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

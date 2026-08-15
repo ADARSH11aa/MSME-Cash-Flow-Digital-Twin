@@ -1,0 +1,85 @@
+/* =============================================================================
+   CashTwin design tokens — PRD Section 2.1
+   Single source of truth. Tailwind (src/config/tailwind.config.js) maps its
+   color/font/size scales onto these variables, so changing a value here
+   changes it everywhere, in both Tailwind classes and raw CSS.
+   ========================================================================== */
+
+:root {
+  /* --- Canvas ------------------------------------------------------------ */
+  --bg-void: #0a0b0a; /* primary dark background (hero, nav, dark sections) */
+  --bg-surface: #111311; /* card / panel background on dark canvas */
+  --bg-surface-2: #171917; /* raised/hover surface on dark canvas */
+  --bg-light: #f6f7f5; /* light section background (alternating sections) */
+  --bg-light-card: #ffffff; /* card background on light canvas */
+
+  /* --- Accent & risk semantics ------------------------------------------- *
+   * Lime is reserved for positive / primary / "go". It must never be used
+   * for destructive actions (revoke, delete) — those use --risk-red outline.
+   * Risk state is never carried by color alone; always paired with a label. */
+  --accent-lime: #b6ff3b; /* primary CTA / positive cash / "healthy" state */
+  --accent-lime-dim: #8fe01a; /* hover / pressed state of primary accent */
+  --risk-red: #ff5a4e; /* liquidity breach / negative / danger */
+  --risk-amber: #ffb238; /* caution / approaching risk / volatile */
+  --info-blue: #6fa8ff; /* neutral informational highlights, links on dark */
+
+  /* --- Text -------------------------------------------------------------- */
+  --text-onDark-hi: #f5f6f3; /* primary text on dark */
+  --text-onDark-lo: #9a9e97; /* secondary / muted text on dark */
+  --text-onLight-hi: #0e100e; /* primary text on light */
+  --text-onLight-lo: #5b5f58; /* secondary / muted text on light */
+
+  /* --- Borders / dividers ------------------------------------------------ */
+  --border-onDark: #2a2d29;
+  --border-onLight: #e3e5e0;
+
+  /* --- Data viz palette (forecast bands, charts) -------------------------- */
+  --viz-optimistic: #b6ff3b;
+  --viz-expected: #6fa8ff;
+  --viz-pessimistic: #ff5a4e;
+  --viz-grid: rgba(255, 255, 255, 0.06); /* on dark */
+  --viz-grid-onLight: rgba(0, 0, 0, 0.06);
+
+  /* --- Derived tints ------------------------------------------------------ *
+   * Low-alpha fills for badge backgrounds, chart bands and risk-state cards.
+   * Kept as tokens so the alpha level stays consistent product-wide.        */
+  --accent-lime-8: rgba(182, 255, 59, 0.08);
+  --accent-lime-16: rgba(182, 255, 59, 0.16);
+  --risk-red-8: rgba(255, 90, 78, 0.08);
+  --risk-red-16: rgba(255, 90, 78, 0.16);
+  --risk-amber-8: rgba(255, 178, 56, 0.08);
+  --risk-amber-16: rgba(255, 178, 56, 0.16);
+  --info-blue-8: rgba(111, 168, 255, 0.08);
+  --info-blue-16: rgba(111, 168, 255, 0.16);
+
+  /* --- Typography -------------------------------------------------------- */
+  --font-display: 'Inter Tight Variable', 'Inter Tight', system-ui, sans-serif;
+  --font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;
+
+  /* --- Elevation ---------------------------------------------------------- *
+   * Card hover per PRD 2.4: 1px border brighten + 2-4px lift. No scale. */
+  --shadow-card-hover-dark: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-card-hover-light: 0 4px 16px rgba(14, 16, 14, 0.08);
+
+  /* --- Focus ring (PRD Section 7) ---------------------------------------- *
+   * info-blue at 2px offset — legible on both dark and light canvases.      */
+  --focus-ring: var(--info-blue);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  /* --- Motion (PRD 2.4) --------------------------------------------------- */
+  --motion-reveal-duration: 400ms;
+  --motion-count-duration: 500ms;
+  --motion-stagger: 60ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Reduced motion: collapse durations to ~0 so any CSS transition that slipped
+   past the JS guards also degrades to an instant, opacity-only change. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-reveal-duration: 0.01ms;
+    --motion-count-duration: 0.01ms;
+    --motion-stagger: 0ms;
+  }
+}
