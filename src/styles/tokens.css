@@ -26,8 +26,8 @@
   /* --- Text -------------------------------------------------------------- */
   --text-onDark-hi: #f5f6f3; /* primary text on dark */
   --text-onDark-lo: #9a9e97; /* secondary / muted text on dark */
-  --text-onLight-hi: #0e100e; /* primary text on light */
-  --text-onLight-lo: #5b5f58; /* secondary / muted text on light */
+  --text-onLight-hi: #0b0d0b; /* primary text on light */
+  --text-onLight-lo: #2e332c; /* secondary / muted text on light (darker, crisp contrast) */
 
   /* --- Borders / dividers ------------------------------------------------ */
   --border-onDark: #2a2d29;
@@ -53,8 +53,8 @@
   --info-blue-16: rgba(111, 168, 255, 0.16);
 
   /* --- Typography -------------------------------------------------------- */
-  --font-display: 'Inter Tight Variable', 'Inter Tight', system-ui, sans-serif;
-  --font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --font-display: 'Outfit', 'Plus Jakarta Sans', 'Inter Tight Variable', 'Inter Tight', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Inter Variable', 'Inter', system-ui, sans-serif;
 
   /* --- Elevation ---------------------------------------------------------- *
    * Card hover per PRD 2.4: 1px border brighten + 2-4px lift. No scale. */

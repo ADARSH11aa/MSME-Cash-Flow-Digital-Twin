@@ -11,6 +11,13 @@ import InvoiceReviewPage from '@/features/invoices/InvoiceReviewPage';
 import SettingsLayout from '@/features/settings/SettingsLayout';
 import PrivacyConsentPage from '@/features/settings/PrivacyConsentPage';
 import AuditLogPage from '@/features/settings/AuditLogPage';
+import ProfileSettingsPage from '@/features/settings/ProfileSettingsPage';
+import DataSourcesPage from '@/features/settings/DataSourcesPage';
+import NotificationsPage from '@/features/settings/NotificationsPage';
+
+import TermsPage from '@/features/legal/TermsPage';
+import PrivacyPolicyPage from '@/features/legal/PrivacyPolicyPage';
+import ContactPage from '@/features/legal/ContactPage';
 
 /**
  * Route table. Marketing and onboarding sit outside the authenticated shell;
@@ -19,7 +26,12 @@ import AuditLogPage from '@/features/settings/AuditLogPage';
 export const router = createBrowserRouter([
   {
     element: <MarketingLayout />,
-    children: [{ path: '/', element: <LandingPage /> }],
+    children: [
+      { path: '/', element: <LandingPage /> },
+      { path: '/terms', element: <TermsPage /> },
+      { path: '/privacy', element: <PrivacyPolicyPage /> },
+      { path: '/contact', element: <ContactPage /> },
+    ],
   },
   { path: '/onboarding', element: <OnboardingFlow /> },
   {
@@ -37,6 +49,9 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <PrivacyConsentPage /> },
           { path: 'audit', element: <AuditLogPage /> },
+          { path: 'profile', element: <ProfileSettingsPage /> },
+          { path: 'data-sources', element: <DataSourcesPage /> },
+          { path: 'notifications', element: <NotificationsPage /> },
         ],
       },
     ],

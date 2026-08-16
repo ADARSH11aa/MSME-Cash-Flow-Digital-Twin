@@ -111,16 +111,27 @@ export default function HowItWorks() {
                   <EyebrowLabel>How it works</EyebrowLabel>
                 </motion.div>
 
-                {/* Scroll progress pill */}
+                {/* Scroll progress pill with stepped dots */}
                 <motion.div
                   variants={{
                     hidden: { opacity: 0, scale: 0.9 },
                     visible: { opacity: 1, scale: 1, transition: { duration: 0.35 } },
                   }}
-                  className="hidden sm:flex items-center gap-2 rounded-full border border-edge-dark bg-surface-2 px-3 py-1 text-[11px] text-chalk-lo"
+                  className="hidden sm:flex items-center gap-3 rounded-full border border-edge-dark bg-surface-2 px-3.5 py-1.5 text-[11px] text-chalk-lo shadow-sm"
                 >
                   <span>Scroll to advance</span>
-                  <span className="font-semibold text-lime">Stage {step.n} / 04</span>
+                  <div className="flex items-center gap-1.5" aria-hidden="true">
+                    {STEPS.map((_, i) => (
+                      <span
+                        key={i}
+                        className={cn(
+                          'h-1.5 rounded-full transition-all duration-300',
+                          i === active ? 'w-4 bg-lime' : 'w-1.5 bg-edge-dark',
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <span className="font-semibold text-lime font-mono">Stage {step.n}/04</span>
                 </motion.div>
               </div>
 

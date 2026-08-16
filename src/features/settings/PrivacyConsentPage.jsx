@@ -48,22 +48,21 @@ export default function PrivacyConsentPage() {
   return (
     <section className="space-y-6">
       <div>
-        <h2 className="font-display text-heading-md text-ink-hi">Privacy &amp; consent</h2>
-        <p className="mt-2 max-w-2xl text-body-sm text-ink-lo">
+        <h2 className="font-display text-heading-md text-chalk-hi">Privacy &amp; consent</h2>
+        <p className="mt-2 max-w-2xl text-body-sm text-chalk-lo">
           Change what CashTwin may analyse at any time. Every change takes effect immediately and is
           recorded in your{' '}
-          <Link to="/app/settings/audit" className="underline underline-offset-2">
+          <Link to="/app/settings/audit" className="underline underline-offset-2 text-lime hover:text-chalk-hi">
             audit log
           </Link>
           .
         </p>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {CONSENT_SCOPES.map((scope) => (
           <ConsentSwitchRow
             key={scope.key}
-            onLight
             title={scope.title}
             description={scope.description}
             sensitive={scope.sensitive}

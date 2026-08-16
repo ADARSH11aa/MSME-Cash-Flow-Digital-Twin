@@ -64,7 +64,7 @@ export default function TrustSection() {
   };
 
   return (
-    <section className="border-b border-edge-dark py-20 md:py-28 overflow-hidden bg-void">
+    <section id="trust" className="border-b border-edge-dark py-20 md:py-28 overflow-hidden bg-void">
       <div className="mx-auto max-w-6xl px-5 md:px-8">
         <motion.div
           initial={{ opacity: 0, y: 10 }}

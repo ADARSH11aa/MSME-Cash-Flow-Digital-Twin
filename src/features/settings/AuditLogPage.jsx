@@ -25,8 +25,8 @@ export default function AuditLogPage() {
   return (
     <section className="space-y-6">
       <div>
-        <h2 className="font-display text-heading-md text-ink-hi">Audit log</h2>
-        <p className="mt-2 max-w-2xl text-body-sm text-ink-lo">
+        <h2 className="font-display text-heading-md text-chalk-hi">Audit log</h2>
+        <p className="mt-2 max-w-2xl text-body-sm text-chalk-lo">
           Everything CashTwin has accessed or changed, newest first. This record cannot be edited.
         </p>
       </div>
@@ -34,11 +34,11 @@ export default function AuditLogPage() {
       {loading || !events ? (
         <div className="space-y-2">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-16 animate-pulse border border-edge-light bg-light-card" />
+            <div key={i} className="h-16 animate-pulse border border-edge-dark bg-surface rounded-lg" />
           ))}
         </div>
       ) : (
-        <ol className="relative border-l border-edge-light pl-6">
+        <ol className="relative border-l border-edge-dark pl-6">
           {events.map((event) => {
             const isOpen = expanded.has(event.id);
             const Icon = event.actor === 'owner' ? User : Cpu;
@@ -47,13 +47,13 @@ export default function AuditLogPage() {
               <li key={event.id} className="relative pb-3">
                 <span
                   className={cn(
-                    'absolute -left-[27px] top-4 h-1.5 w-1.5',
-                    event.actor === 'owner' ? 'bg-ink-hi' : 'bg-edge-light',
+                    'absolute -left-[27px] top-4 h-1.5 w-1.5 rounded-full',
+                    event.actor === 'owner' ? 'bg-lime' : 'bg-edge-dark',
                   )}
                   aria-hidden="true"
                 />
 
-                <div className="border border-edge-light bg-light-card">
+                <div className="border border-edge-dark bg-surface rounded-lg overflow-hidden shadow-sm">
                   <button
                     type="button"
                     onClick={() => toggle(event.id)}
@@ -61,23 +61,21 @@ export default function AuditLogPage() {
                     disabled={!event.detail}
                     className={cn(
                       'flex w-full items-start gap-3 px-4 py-3 text-left transition-colors',
-                      event.detail ? 'hover:bg-light' : 'cursor-default',
+                      event.detail ? 'hover:bg-surface-2' : 'cursor-default',
                     )}
                   >
-                    <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-lo" aria-hidden="true" />
+                    <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-lime" aria-hidden="true" />
 
-                    {/* The event name is the point of an audit entry, so it
-                        wraps in full and the timestamp drops beneath it on
-                        narrow screens rather than truncating the name. */}
+                    {/* The event name is the point of an audit entry */}
                     <span className="min-w-0 flex-1">
-                      <span className="block text-body-md text-ink-hi">{event.event}</span>
+                      <span className="block text-body-md text-chalk-hi font-medium">{event.event}</span>
                       <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                        <span className="text-label-xs uppercase text-ink-lo">
+                        <span className="text-label-xs uppercase text-chalk-lo">
                           {event.actor === 'owner' ? 'Owner' : 'System'}
                         </span>
                         <span
                           data-numeric
-                          className="tabular text-body-sm text-ink-lo sm:hidden"
+                          className="tabular text-body-sm text-chalk-lo sm:hidden"
                         >
                           {formatDateTime(event.timestamp)}
                         </span>
@@ -86,7 +84,7 @@ export default function AuditLogPage() {
 
                     <span
                       data-numeric
-                      className="hidden shrink-0 tabular text-body-sm text-ink-lo sm:inline"
+                      className="hidden shrink-0 tabular text-body-sm text-chalk-lo sm:inline"
                     >
                       {formatDateTime(event.timestamp)}
                     </span>
@@ -94,7 +92,7 @@ export default function AuditLogPage() {
                     {event.detail ? (
                       <ChevronDown
                         className={cn(
-                          'mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-lo transition-transform duration-200',
+                          'mt-0.5 h-3.5 w-3.5 shrink-0 text-chalk-lo transition-transform duration-200',
                           isOpen && 'rotate-180',
                         )}
                         aria-hidden="true"
@@ -105,7 +103,7 @@ export default function AuditLogPage() {
                   </button>
 
                   {isOpen && event.detail ? (
-                    <p className="border-t border-edge-light bg-light px-4 py-3 pl-11 text-body-sm text-ink-lo">
+                    <p className="border-t border-edge-dark bg-surface-2 px-4 py-3 pl-11 text-body-sm text-chalk-lo">
                       {event.detail}
                     </p>
                   ) : null}
