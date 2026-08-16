@@ -11,20 +11,21 @@ import EyebrowLabel from '@/components/shared/EyebrowLabel';
 const NAV = [
   { to: '/app/settings', label: 'Privacy & consent', end: true },
   { to: '/app/settings/audit', label: 'Audit log' },
+  { to: '/app/settings/profile', label: 'Profile' },
+  { to: '/app/settings/data-sources', label: 'Data sources' },
+  { to: '/app/settings/notifications', label: 'Notifications' },
 ];
-
-const DISABLED = ['Profile', 'Data sources', 'Notifications'];
 
 export default function SettingsLayout() {
   return (
-    <div className="min-h-screen bg-light">
+    <div className="min-h-screen bg-void">
       <div className="px-5 py-8 md:px-8">
         <header className="mb-8">
-          <EyebrowLabel onLight filled>
+          <EyebrowLabel filled>
             Settings
           </EyebrowLabel>
-          <h1 className="mt-3 font-display text-display-md text-ink-hi">
-            Your data, and who may see it
+          <h1 className="mt-3 font-display text-display-md text-chalk-hi">
+            Account, Data &amp; Privacy Settings
           </h1>
         </header>
 
@@ -40,15 +41,15 @@ export default function SettingsLayout() {
                       cn(
                         'flex items-center gap-2.5 border-b py-3 text-body-sm transition-colors',
                         isActive
-                          ? 'border-ink-hi text-ink-hi'
-                          : 'border-edge-light text-ink-lo hover:text-ink-hi',
+                          ? 'border-lime text-lime font-semibold'
+                          : 'border-edge-dark text-chalk-lo hover:text-chalk-hi',
                       )
                     }
                   >
                     {({ isActive }) => (
                       <>
                         <span
-                          className={cn('h-1.5 w-1.5 shrink-0', isActive ? 'bg-ink-hi' : 'bg-edge-light')}
+                          className={cn('h-1.5 w-1.5 shrink-0 rounded-full', isActive ? 'bg-lime' : 'bg-edge-dark')}
                           aria-hidden="true"
                         />
                         {item.label}
@@ -57,22 +58,13 @@ export default function SettingsLayout() {
                   </NavLink>
                 </li>
               ))}
-
-              {DISABLED.map((label) => (
-                <li key={label}>
-                  <span className="flex items-center gap-2.5 border-b border-edge-light py-3 text-body-sm text-ink-lo opacity-50">
-                    <span className="h-1.5 w-1.5 shrink-0 bg-edge-light" aria-hidden="true" />
-                    {label}
-                  </span>
-                </li>
-              ))}
             </ul>
           </nav>
 
           <div className="min-w-0 space-y-8">
             <Outlet />
-            <div className="border-t border-edge-light pt-6">
-              <DisclaimerBar onLight />
+            <div className="border-t border-edge-dark pt-6">
+              <DisclaimerBar />
             </div>
           </div>
         </div>

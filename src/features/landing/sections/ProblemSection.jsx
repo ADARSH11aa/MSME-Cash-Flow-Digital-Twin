@@ -1,6 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { Banknote, Clock, Receipt, ArrowRight } from 'lucide-react';
-import BracketFrame from '@/components/shared/BracketFrame';
+import { Banknote, Clock, Receipt } from 'lucide-react';
 import EyebrowLabel from '@/components/shared/EyebrowLabel';
 import { formatCurrency } from '@/lib/format';
 import Reveal from './Reveal';
@@ -18,6 +17,7 @@ const CARDS = [
     value: 240000,
     body: 'Looks comfortable. This is the liquid balance most accounting dashboards show you.',
     pill: 'Liquid Bank Balance',
+    badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
   },
   {
     step: '02',
@@ -26,6 +26,7 @@ const CARDS = [
     value: 800000,
     body: 'Money earned and invoiced, but not yet collected. Profit on paper, not in the bank.',
     pill: 'Uncollected Inflow',
+    badgeClass: 'bg-blue-50 text-blue-800 border-blue-200/80',
   },
   {
     step: '03',
@@ -34,6 +35,7 @@ const CARDS = [
     value: 700000,
     body: 'Salaries, raw material suppliers, and rent that will not wait for buyers to settle.',
     pill: 'Rigid Obligations',
+    badgeClass: 'bg-amber-50 text-amber-900 border-amber-200/80',
   },
 ];
 
@@ -45,7 +47,7 @@ export default function ProblemSection() {
   const prefersReduced = useReducedMotion();
 
   return (
-    <section className="border-b border-edge-light bg-light py-20 md:py-28 overflow-hidden">
+    <section id="problem" className="border-b border-edge-light bg-light py-20 md:py-28 overflow-hidden">
       <div className="mx-auto max-w-6xl px-5 md:px-8">
         <Reveal>
           <EyebrowLabel onLight filled>
@@ -56,7 +58,7 @@ export default function ProblemSection() {
         {/* Bi-directional Staggered Headline */}
         <div className="mt-6 max-w-2xl">
           {prefersReduced ? (
-            <h2 className="font-display text-[34px] leading-tight tracking-[-0.02em] text-ink-hi md:text-display-lg">
+            <h2 className="font-display text-[34px] leading-tight tracking-[-0.02em] text-neutral-950 md:text-display-lg">
               {HEADLINE_TEXT}
             </h2>
           ) : (
@@ -67,13 +69,13 @@ export default function ProblemSection() {
         {/* Bi-directional Staggered Paragraph Text */}
         <div className="mt-5 max-w-2xl">
           {prefersReduced ? (
-            <p className="text-body-md text-ink-lo leading-relaxed">{PARAGRAPH_TEXT}</p>
+            <p className="text-body-md text-neutral-700 leading-relaxed font-normal">{PARAGRAPH_TEXT}</p>
           ) : (
             <StaggerParagraphText text={PARAGRAPH_TEXT} />
           )}
         </div>
 
-        {/* Left-to-Right Sequential Slideshow Cards Grid */}
+        {/* Left-to-Right Sequential Slideshow Cards Grid with Refined Shape */}
         <div className="mt-14 grid gap-6 md:grid-cols-3">
           {CARDS.map((card, i) => (
             <motion.div
@@ -88,48 +90,46 @@ export default function ProblemSection() {
               }}
               className="h-full"
             >
-              <BracketFrame tone="neutral" onLight className="h-full">
-                <div className="group flex h-full flex-col justify-between gap-6 rounded-2xl border border-edge-light bg-light-card p-7 shadow-sm transition-all hover:shadow-lg hover:border-ink-lo/40">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink-hi/5 text-ink-hi transition-transform group-hover:scale-105">
-                        <card.Icon className="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      <span className="rounded-full bg-ink-hi/5 px-2.5 py-0.5 text-[11px] font-medium text-ink-lo">
-                        {card.pill}
-                      </span>
+              <div className="group flex h-full flex-col justify-between gap-6 rounded-2xl border border-neutral-200/90 bg-white p-7 shadow-[0_4px_20px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_16px_36px_rgba(0,0,0,0.08)] hover:-translate-y-1.5 hover:border-neutral-400/80">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-900 text-white shadow-sm ring-1 ring-black/5 transition-transform duration-300 group-hover:scale-105">
+                      <card.Icon className="h-5 w-5" aria-hidden="true" />
                     </div>
-
-                    <div className="mt-5 flex items-center gap-2">
-                      <span className="text-[11px] font-bold text-ink-lo/70 font-mono">
-                        STEP {card.step}
-                      </span>
-                      <span className="h-1 w-1 rounded-full bg-ink-lo/40" />
-                      <span className="text-label-xs uppercase tracking-wide text-ink-lo font-semibold">
-                        {card.label}
-                      </span>
-                    </div>
-
-                    <span
-                      data-numeric
-                      className="mt-1.5 block font-display text-display-md font-bold tabular text-ink-hi"
-                    >
-                      {formatCurrency(card.value)}
+                    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold shadow-xs ${card.badgeClass}`}>
+                      {card.pill}
                     </span>
                   </div>
 
-                  <p className="text-body-sm text-ink-lo leading-relaxed border-t border-edge-light/60 pt-4">
-                    {card.body}
-                  </p>
+                  <div className="mt-6 flex items-center gap-2">
+                    <span className="text-xs font-bold text-neutral-900 font-mono tracking-wider">
+                      STEP {card.step}
+                    </span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />
+                    <span className="text-xs uppercase tracking-wider text-neutral-800 font-bold">
+                      {card.label}
+                    </span>
+                  </div>
+
+                  <span
+                    data-numeric
+                    className="mt-2 block font-display text-[32px] md:text-[36px] font-extrabold tracking-tight tabular text-neutral-950"
+                  >
+                    {formatCurrency(card.value)}
+                  </span>
                 </div>
-              </BracketFrame>
+
+                <p className="text-[14px] text-neutral-700 font-normal leading-relaxed border-t border-neutral-200/80 pt-4.5">
+                  {card.body}
+                </p>
+              </div>
             </motion.div>
           ))}
         </div>
 
         <Reveal index={3}>
-          <div className="mt-10 rounded-xl border border-edge-light/80 bg-light-card p-6 shadow-sm">
-            <p className="border-l-2 border-ink-hi pl-4 text-body-md font-medium text-ink-hi">
+          <div className="mt-10 rounded-2xl border border-neutral-200/90 bg-white p-6 shadow-sm">
+            <p className="border-l-3 border-neutral-950 pl-4 text-base font-semibold text-neutral-900 leading-relaxed">
               The business is profitable. It is also 12 days from being unable to pay its staff. Those two facts live in the same spreadsheet, and traditional accounting software never connects them.
             </p>
           </div>

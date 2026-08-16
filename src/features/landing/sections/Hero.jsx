@@ -71,7 +71,7 @@ export default function Hero() {
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Button asChild size="lg" className="rounded-full px-8 shadow-lg shadow-lime/10">
                 <Link to="/onboarding">
-                  Try CashTwin for free <ArrowRight className="h-4 w-4 ml-1" />
+                  Get started <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </Button>
               <Button asChild variant="secondary" size="lg" className="rounded-full px-7">

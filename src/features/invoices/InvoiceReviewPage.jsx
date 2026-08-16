@@ -47,102 +47,103 @@ export default function InvoiceReviewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-light">
+    <div className="min-h-screen bg-void">
       <div className="space-y-6 px-5 py-8 md:px-8">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <EyebrowLabel onLight filled>
+            <EyebrowLabel filled>
               Imported data
             </EyebrowLabel>
-            <h1 className="mt-3 font-display text-display-md text-ink-hi">Review your invoices</h1>
-            <p className="mt-1 max-w-2xl text-body-sm text-ink-lo">
+            <h1 className="mt-3 font-display text-display-md text-chalk-hi">Review your invoices</h1>
+            <p className="mt-1 max-w-2xl text-body-sm text-chalk-lo">
               Check what we read from your documents. Correcting any value re-runs your forecast
               straight away.
             </p>
           </div>
-          <Button variant="secondaryLight">
+          <Button variant="secondary">
             <UploadCloud className="h-4 w-4" /> Import more
           </Button>
         </header>
 
         {lastEdit ? (
-          <div className="flex items-center gap-3 border border-edge-light bg-light-card px-4 py-3">
-            <span className="text-label-xs uppercase text-ink-lo">Last correction</span>
-            <span data-numeric className="flex items-center gap-2 text-body-sm tabular text-ink-hi">
-              {lastEdit.id}: <span className="line-through">{formatCurrency(lastEdit.before)}</span>
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="text-ink-hi">{formatCurrency(lastEdit.after)}</span>
+          <div className="flex items-center gap-3 border border-edge-dark bg-surface-2 px-4 py-3 rounded-lg shadow-sm">
+            <span className="text-label-xs uppercase text-chalk-lo">Last correction</span>
+            <span data-numeric className="flex items-center gap-2 text-body-sm tabular text-chalk-hi">
+              {lastEdit.id}: <span className="line-through text-chalk-lo">{formatCurrency(lastEdit.before)}</span>
+              <ArrowRight className="h-3.5 w-3.5 text-lime" aria-hidden="true" />
+              <span className="text-lime font-semibold">{formatCurrency(lastEdit.after)}</span>
             </span>
           </div>
         ) : null}
 
         {loading && !data ? (
-          <div className="h-96 animate-pulse border border-edge-light bg-light-card" />
+          <div className="h-96 animate-pulse border border-edge-dark bg-surface rounded-xl" />
         ) : (
-          <DataTable
-            onLight
-            caption="Imported invoices, with OCR confidence and editable amounts"
-            rows={invoices}
-            onCellEdit={handleEdit}
-            columns={[
-              { key: 'id', header: 'Invoice', sortable: true, width: '120px' },
-              { key: 'customer', header: 'Customer', sortable: true },
-              {
-                key: 'amount',
-                header: 'Amount',
-                sortable: true,
-                align: 'right',
-                editable: true,
-                render: (row) => (
-                  <span data-numeric className="tabular">
-                    {formatCurrency(row.amount)}
-                    {row.importedAmount !== row.amount ? (
-                      <span className="ml-2 text-body-sm text-ink-lo line-through">
-                        {formatCurrency(row.importedAmount)}
-                      </span>
-                    ) : null}
-                  </span>
-                ),
-              },
-              {
-                key: 'confidence',
-                header: 'Confidence',
-                render: (row) => <Pill status={row.confidence} onLight />,
-              },
-              {
-                key: 'dueDate',
-                header: 'Due date',
-                sortable: true,
-                render: (row) => (
-                  <span data-numeric className="tabular">
-                    {formatDateShort(row.dueDate)}
-                  </span>
-                ),
-              },
-              {
-                key: 'status',
-                header: 'Status',
-                render: (row) => (
-                  <span className="flex items-center gap-2">
-                    <Pill status={row.status} onLight />
-                    {row.daysOverdue > 0 ? (
-                      <span data-numeric className="tabular text-body-sm text-ink-lo">
-                        {row.daysOverdue}d
-                      </span>
-                    ) : null}
-                  </span>
-                ),
-              },
-              { key: 'source', header: 'Source' },
-            ]}
-          />
+          <div className="rounded-xl border border-edge-dark overflow-hidden shadow-sm">
+            <DataTable
+              caption="Imported invoices, with OCR confidence and editable amounts"
+              rows={invoices}
+              onCellEdit={handleEdit}
+              columns={[
+                { key: 'id', header: 'Invoice', sortable: true, width: '120px' },
+                { key: 'customer', header: 'Customer', sortable: true },
+                {
+                  key: 'amount',
+                  header: 'Amount',
+                  sortable: true,
+                  align: 'right',
+                  editable: true,
+                  render: (row) => (
+                    <span data-numeric className="tabular font-medium">
+                      {formatCurrency(row.amount)}
+                      {row.importedAmount !== row.amount ? (
+                        <span className="ml-2 text-body-sm text-chalk-lo line-through">
+                          {formatCurrency(row.importedAmount)}
+                        </span>
+                      ) : null}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'confidence',
+                  header: 'Confidence',
+                  render: (row) => <Pill status={row.confidence} />,
+                },
+                {
+                  key: 'dueDate',
+                  header: 'Due date',
+                  sortable: true,
+                  render: (row) => (
+                    <span data-numeric className="tabular">
+                      {formatDateShort(row.dueDate)}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'status',
+                  header: 'Status',
+                  render: (row) => (
+                    <span className="flex items-center gap-2">
+                      <Pill status={row.status} />
+                      {row.daysOverdue > 0 ? (
+                        <span data-numeric className="tabular text-body-sm text-risk font-semibold">
+                          +{row.daysOverdue}d
+                        </span>
+                      ) : null}
+                    </span>
+                  ),
+                },
+                { key: 'source', header: 'Source' },
+              ]}
+            />
+          </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-edge-light pt-6">
-          <p className="text-body-sm text-ink-lo">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-edge-dark pt-6">
+          <p className="text-body-sm text-chalk-lo">
             Amounts are editable — select any figure in the Amount column to correct it.
           </p>
-          <DisclaimerBar onLight />
+          <DisclaimerBar />
         </div>
       </div>
     </div>
