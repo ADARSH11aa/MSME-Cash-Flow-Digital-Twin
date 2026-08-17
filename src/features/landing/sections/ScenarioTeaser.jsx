@@ -39,7 +39,7 @@ export default function ScenarioTeaser() {
             {/* Typewriter Staggered Headline */}
             <div className="mt-6">
               {prefersReduced ? (
-                <h2 className="font-display text-[34px] leading-tight tracking-[-0.02em] text-chalk-hi md:text-display-lg">
+                <h2 className="font-display text-[34px] leading-tight tracking-[-0.02em] text-[#0D1720] md:text-display-lg font-bold">
                   {HEADLINE}
                 </h2>
               ) : (
@@ -50,10 +50,10 @@ export default function ScenarioTeaser() {
             {/* Typewriter / Staggered Paragraph Text */}
             <div className="mt-5">
               {prefersReduced ? (
-                <p className="text-body-md text-chalk-lo leading-relaxed">
+                <p className="text-body-md text-[#6E7D87] leading-relaxed">
                   Move one assumption and the whole cash-flow projection recalculates in front of you. Here, delaying a single customer by 30 days pulls your liquidity breach forward from{' '}
-                  <span className="tabular font-semibold text-caution">28 days</span> to{' '}
-                  <span className="tabular font-semibold text-risk">16 days</span>.
+                  <span className="tabular font-semibold text-[#FFB238]">28 days</span> to{' '}
+                  <span className="tabular font-semibold text-[#FF4D6D]">16 days</span>.
                 </p>
               ) : (
                 <TypewriterParagraph
@@ -66,9 +66,9 @@ export default function ScenarioTeaser() {
             {/* Animated Button with border/text shine effect */}
             <div className="mt-8">
               <Link to="/app/scenarios" className="inline-block">
-                <AnimatedButton className="gap-2">
+                <AnimatedButton className="gap-2 bg-[#0B1720] text-white hover:bg-[#182635]">
                   <span>Open the simulator</span>
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4 text-[#24D6A0]" />
                 </AnimatedButton>
               </Link>
             </div>
@@ -84,20 +84,20 @@ export default function ScenarioTeaser() {
               duration: prefersReduced ? 0.01 : 0.6,
               ease: [0.16, 1, 0.3, 1],
             }}
-            className="rounded-2xl border border-edge-dark/80 bg-surface p-6 shadow-2xl relative overflow-hidden"
+            className="rounded-2xl border border-edge-dark bg-surface p-6 shadow-[0_12px_36px_rgba(11,23,32,0.06)] relative overflow-hidden"
           >
             {/* Ambient top light */}
             <div
-              className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 h-32 w-64 rounded-full bg-lime/10 blur-3xl"
+              className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 h-32 w-64 rounded-full bg-[#24D6A0]/10 blur-3xl"
               aria-hidden="true"
             />
 
-            <div className="flex items-center justify-between pb-4 border-b border-edge-dark/60 mb-4 relative z-10">
+            <div className="flex items-center justify-between pb-4 border-b border-edge-dark mb-4 relative z-10">
               <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-risk animate-pulse" />
-                <span className="text-body-sm font-semibold text-chalk-hi">Scenario: Sharma 30d Delay</span>
+                <span className="h-2 w-2 rounded-full bg-[#FF4D6D] animate-pulse" />
+                <span className="text-body-sm font-semibold text-[#0D1720]">Scenario: Sharma 30d Delay</span>
               </div>
-              <span className="rounded-full bg-risk-8 border border-risk/20 px-2.5 py-0.5 text-label-xs uppercase font-semibold text-risk">
+              <span className="rounded-full bg-[#FF4D6D]/10 border border-[#FF4D6D]/25 px-2.5 py-0.5 text-label-xs uppercase font-semibold text-[#FF4D6D]">
                 Breach in {shocked.daysToBreach}d
               </span>
             </div>
