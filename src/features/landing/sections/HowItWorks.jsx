@@ -117,7 +117,7 @@ export default function HowItWorks() {
                     hidden: { opacity: 0, scale: 0.9 },
                     visible: { opacity: 1, scale: 1, transition: { duration: 0.35 } },
                   }}
-                  className="hidden sm:flex items-center gap-3 rounded-full border border-edge-dark bg-surface-2 px-3.5 py-1.5 text-[11px] text-chalk-lo shadow-sm"
+                  className="hidden sm:flex items-center gap-3 rounded-full border border-edge-dark bg-surface px-3.5 py-1.5 text-[11px] text-[#6E7D87] shadow-sm"
                 >
                   <span>Scroll to advance</span>
                   <div className="flex items-center gap-1.5" aria-hidden="true">
@@ -126,18 +126,18 @@ export default function HowItWorks() {
                         key={i}
                         className={cn(
                           'h-1.5 rounded-full transition-all duration-300',
-                          i === active ? 'w-4 bg-lime' : 'w-1.5 bg-edge-dark',
+                          i === active ? 'w-4 bg-[#24D6A0]' : 'w-1.5 bg-[#E6E1D6]',
                         )}
                       />
                     ))}
                   </div>
-                  <span className="font-semibold text-lime font-mono">Stage {step.n}/04</span>
+                  <span className="font-bold text-[#0D1720] font-mono">Stage {step.n}/04</span>
                 </motion.div>
               </div>
 
               {/* Staggered Words Headline */}
               <motion.h2
-                className="mt-4 max-w-2xl font-display text-[32px] leading-tight tracking-[-0.02em] text-chalk-hi md:text-display-lg"
+                className="mt-4 max-w-2xl font-display text-[32px] leading-tight tracking-[-0.02em] text-[#0D1720] md:text-display-lg font-bold"
               >
                 {HEADLINE_TEXT.split(' ').map((word, i) => (
                   <motion.span key={`${word}-${i}`} variants={wordVariants} className="inline-block mr-[0.25em]">
@@ -157,17 +157,17 @@ export default function HowItWorks() {
                       onClick={() => setActive(i)}
                       aria-current={i === active}
                       className={cn(
-                        'group flex w-full items-center justify-between rounded-xl border p-4 text-left transition-all',
+                        'group flex w-full items-center justify-between rounded-xl border p-4 text-left transition-all cursor-pointer',
                         i === active
-                          ? 'border-chalk-hi/90 bg-surface-2 shadow-xl text-chalk-hi ring-1 ring-white/10'
-                          : 'border-edge-dark/60 bg-surface/70 text-chalk-lo hover:border-edge-dark hover:text-chalk-hi'
+                          ? 'border-[#0B1720] bg-surface shadow-md text-[#0D1720] ring-1 ring-[#0B1720]/10'
+                          : 'border-edge-dark bg-surface/70 text-[#6E7D87] hover:border-[#0B1720] hover:text-[#0D1720]'
                       )}
                     >
                       <div className="flex items-center gap-4">
                         <span
                           className={cn(
                             'flex h-7 w-7 items-center justify-center rounded-lg text-label-xs font-semibold tabular transition-colors',
-                            i === active ? 'bg-lime text-ink-hi' : 'border border-edge-dark bg-void text-chalk-lo'
+                            i === active ? 'bg-[#0B1720] text-white' : 'border border-edge-dark bg-surface-2 text-[#6E7D87]'
                           )}
                         >
                           {s.n}
@@ -179,7 +179,7 @@ export default function HowItWorks() {
                       <span
                         className={cn(
                           'h-2 w-2 rounded-full transition-all',
-                          i === active ? 'bg-lime scale-125' : 'bg-transparent'
+                          i === active ? 'bg-[#24D6A0] scale-125' : 'bg-transparent'
                         )}
                         aria-hidden="true"
                       />
@@ -189,7 +189,7 @@ export default function HowItWorks() {
               </ol>
 
               {/* Right Dynamic Showcase Panel */}
-              <div className="overflow-hidden rounded-2xl border border-edge-dark bg-surface shadow-2xl min-h-[340px]">
+              <div className="overflow-hidden rounded-2xl border border-edge-dark bg-surface-2 md:bg-gradient-to-r md:from-surface md:from-50% md:to-surface-2 md:to-50% shadow-[0_12px_36px_rgba(11,23,32,0.06)]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={active}
@@ -197,22 +197,22 @@ export default function HowItWorks() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -15 }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                    className="grid md:grid-cols-2 h-full"
+                    className="grid md:grid-cols-2 min-h-[360px] items-stretch"
                   >
-                    {/* Stage Details */}
-                    <div className="flex flex-col justify-between gap-6 p-8 md:p-10">
+                    {/* Stage Details (Left Side) */}
+                    <div className="flex flex-col justify-between gap-6 p-8 md:p-10 bg-surface h-full">
                       <div>
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-lime-16 border border-lime/30 px-3 py-0.5 text-label-xs uppercase text-lime font-semibold">
-                          <span className="h-1.5 w-1.5 rounded-full bg-lime" /> Stage {step.n}
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#24D6A0]/15 border border-[#24D6A0]/35 px-3 py-0.5 text-label-xs uppercase text-[#0D1720] font-semibold">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#24D6A0]" /> Stage {step.n}
                         </span>
-                        <h3 className="mt-3 font-display text-display-md text-chalk-hi">{step.title}</h3>
-                        <p className="mt-4 text-body-md text-chalk-lo leading-relaxed">{step.body}</p>
+                        <h3 className="mt-3 font-display text-display-md text-[#0D1720] font-bold">{step.title}</h3>
+                        <p className="mt-4 text-body-md text-[#6E7D87] leading-relaxed">{step.body}</p>
                       </div>
                     </div>
 
-                    {/* Active Output Signals */}
-                    <div className="flex flex-col justify-center gap-3 border-t border-edge-dark bg-surface-2 p-8 md:border-l md:border-t-0 md:p-10">
-                      <span className="text-label-xs uppercase text-chalk-lo mb-1 font-semibold tracking-wider">
+                    {/* Active Output Signals (Right Side) */}
+                    <div className="flex flex-col justify-center gap-3 border-t border-edge-dark bg-surface-2 p-8 md:border-l md:border-t-0 md:p-10 h-full">
+                      <span className="text-label-xs uppercase text-[#6E7D87] mb-1 font-semibold tracking-wider">
                         Active Output Signals
                       </span>
                       {step.panel.map((item, idx) => (
@@ -221,10 +221,10 @@ export default function HowItWorks() {
                           initial={{ opacity: 0, x: 10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.25, delay: idx * 0.06 }}
-                          className="flex items-center gap-3 rounded-xl border border-edge-dark bg-surface px-4 py-3 shadow-sm"
+                          className="flex items-center gap-3 rounded-xl border border-edge-dark bg-surface px-4 py-3 shadow-xs"
                         >
-                          <span className="h-2 w-2 shrink-0 rounded-full bg-lime" aria-hidden="true" />
-                          <span className="text-body-sm font-medium text-chalk-hi">{item}</span>
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-[#24D6A0]" aria-hidden="true" />
+                          <span className="text-body-sm font-medium text-[#0D1720]">{item}</span>
                         </motion.div>
                       ))}
                     </div>

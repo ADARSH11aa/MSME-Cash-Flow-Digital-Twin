@@ -90,12 +90,12 @@ export default function SectorStrip() {
   return (
     <section
       ref={containerRef}
-      className="relative overflow-hidden border-b border-edge-dark py-16 md:py-20 bg-surface/20"
+      className="relative overflow-hidden border-b border-edge-dark py-16 md:py-20 bg-void"
     >
       {/* Ambient glow with parallax depth */}
       <motion.div
         style={{ y: glowY, opacity: glowOpacity }}
-        className="pointer-events-none absolute left-1/2 -top-12 h-64 w-96 -translate-x-1/2 rounded-full bg-lime blur-[110px]"
+        className="pointer-events-none absolute left-1/2 -top-12 h-64 w-96 -translate-x-1/2 rounded-full bg-[#24D6A0] blur-[110px]"
         aria-hidden="true"
       />
 
@@ -111,19 +111,19 @@ export default function SectorStrip() {
           {/* Header */}
           <motion.p
             variants={titleVariants}
-            className="text-label-xs uppercase tracking-wider text-chalk-lo"
+            className="text-label-xs uppercase tracking-wider text-[#6E7D87] font-medium"
           >
             Engineered for growth-oriented Indian MSMEs across industries
           </motion.p>
 
-          {/* Staggered Pills (Bi-directional on scroll up & down) */}
+          {/* Staggered Pills */}
           <motion.div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             {SECTORS.map((sector) => (
               <motion.div
                 key={sector}
                 variants={pillVariants}
                 whileHover={{ scale: 1.05, y: -2 }}
-                className="rounded-full border border-edge-dark/80 bg-surface/90 px-5 py-2.5 text-label-xs uppercase text-chalk-lo shadow-sm backdrop-blur-sm transition-colors hover:border-lime/60 hover:text-chalk-hi cursor-default"
+                className="rounded-full border border-edge-dark bg-surface px-5 py-2.5 text-label-xs uppercase text-[#0D1720] font-semibold shadow-[0_2px_8px_rgba(11,23,32,0.04)] backdrop-blur-sm transition-all hover:border-[#0B1720] hover:bg-surface-2 cursor-default"
               >
                 {sector}
               </motion.div>

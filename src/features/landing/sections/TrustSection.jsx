@@ -82,19 +82,19 @@ export default function TrustSection() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: false, amount: 0.25 }}
-            className="flex h-full flex-col justify-between gap-8 rounded-2xl border border-edge-dark/80 bg-surface p-8 md:p-10 shadow-xl transition-all hover:border-lime/40"
+            className="flex h-full flex-col justify-between gap-8 rounded-2xl border border-edge-dark bg-surface p-8 md:p-10 shadow-[0_12px_36px_rgba(11,23,32,0.06)] transition-all hover:border-[#0B1720]"
           >
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               whileInView={{ scale: 1, opacity: 1 }}
               viewport={{ once: false, amount: 0.3 }}
               transition={{ duration: 0.4, delay: 0.05 }}
-              className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-16 border border-lime/20 text-lime shadow-sm"
+              className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#24D6A0]/15 border border-[#24D6A0]/30 text-[#24D6A0] shadow-xs"
             >
               <Quote className="h-6 w-6" aria-hidden="true" />
             </motion.div>
 
-            <blockquote className="font-display text-[24px] sm:text-[28px] leading-snug tracking-[-0.01em] text-chalk-hi font-medium">
+            <blockquote className="font-display text-[24px] sm:text-[28px] leading-snug tracking-[-0.01em] text-[#0D1720] font-medium">
               {prefersReduced ? (
                 QUOTE_TEXT
               ) : (
@@ -115,7 +115,7 @@ export default function TrustSection() {
                 hidden: { opacity: 0 },
                 visible: { opacity: 1, transition: { duration: 0.4, delay: 0.4 } },
               }}
-              className="text-body-sm text-chalk-lo border-t border-edge-dark/50 pt-4"
+              className="text-body-sm text-[#6E7D87] border-t border-edge-dark pt-4"
             >
               Illustrative — the situation CashTwin is built for, not a customer endorsement.
             </motion.figcaption>
@@ -123,35 +123,38 @@ export default function TrustSection() {
 
           {/* Right Stats Cards */}
           <div className="grid gap-4">
-            {STATS.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={prefersReduced ? { opacity: 0 } : { opacity: 0, x: 20, scale: 0.96 }}
-                whileInView={{ opacity: 1, x: 0, scale: 1 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{
-                  duration: prefersReduced ? 0.01 : 0.5,
-                  delay: prefersReduced ? 0 : i * 0.12,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                whileHover={{ y: -2, transition: { duration: 0.15 } }}
-                className="flex h-full flex-col justify-center gap-2 rounded-2xl border border-edge-dark/80 bg-surface p-7 shadow-sm transition-all hover:border-lime/40 hover:bg-surface-2"
-              >
-                <span
-                  data-numeric
-                  className="font-display text-display-lg font-bold tabular text-lime"
+            {STATS.map((stat, i) => {
+              const statColors = ['text-[#24D6A0]', 'text-[#4C7DFF]', 'text-[#26C6DA]'][i % 3];
+              return (
+                <motion.div
+                  key={stat.label}
+                  initial={prefersReduced ? { opacity: 0 } : { opacity: 0, x: 20, scale: 0.96 }}
+                  whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                  viewport={{ once: false, amount: 0.2 }}
+                  transition={{
+                    duration: prefersReduced ? 0.01 : 0.5,
+                    delay: prefersReduced ? 0 : i * 0.12,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  whileHover={{ y: -2, transition: { duration: 0.15 } }}
+                  className="flex h-full flex-col justify-center gap-2 rounded-2xl border border-edge-dark bg-surface p-7 shadow-[0_2px_12px_rgba(11,23,32,0.04)] transition-all hover:border-[#0B1720] hover:shadow-md"
                 >
-                  <StatsCounter
-                    value={stat.numValue}
-                    prefix={stat.prefix}
-                    suffix={stat.suffix}
-                    decimals={stat.decimals}
-                    duration={1.6}
-                  />
-                </span>
-                <span className="text-body-sm text-chalk-lo leading-relaxed">{stat.label}</span>
-              </motion.div>
-            ))}
+                  <span
+                    data-numeric
+                    className={`font-display text-display-lg font-bold tabular ${statColors}`}
+                  >
+                    <StatsCounter
+                      value={stat.numValue}
+                      prefix={stat.prefix}
+                      suffix={stat.suffix}
+                      decimals={stat.decimals}
+                      duration={1.6}
+                    />
+                  </span>
+                  <span className="text-body-sm text-[#6E7D87] leading-relaxed font-medium">{stat.label}</span>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>

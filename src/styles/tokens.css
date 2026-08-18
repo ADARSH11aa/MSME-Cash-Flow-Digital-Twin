@@ -1,81 +1,94 @@
 /* =============================================================================
-   CashTwin design tokens — PRD Section 2.1
-   Single source of truth. Tailwind (src/config/tailwind.config.js) maps its
-   color/font/size scales onto these variables, so changing a value here
-   changes it everywhere, in both Tailwind classes and raw CSS.
+   CashTwin design tokens — Light Cream × White × Navy × Green/Cyan/Blue Theme
+   Palette:
+     Canvas / Void: #FAF7F2 (Light shade of Cream)
+     Surface:       #FFFFFF (Pure White)
+     Navy:          #0B1720 (Deep Midnight Navy)
+     Green:         #24D6A0 (Vibrant Mint Green)
+     Cyan:          #26C6DA (Vibrant Cyan)
+     Blue:          #4C7DFF (Electric Royal Blue)
+     Text:          #0D1720 (High-contrast Deep Navy)
+     Muted:         #6E7D87 (Refined Slate Grey)
    ========================================================================== */
 
 :root {
-  /* --- Canvas ------------------------------------------------------------ */
-  --bg-void: #0a0b0a; /* primary dark background (hero, nav, dark sections) */
-  --bg-surface: #111311; /* card / panel background on dark canvas */
-  --bg-surface-2: #171917; /* raised/hover surface on dark canvas */
-  --bg-light: #f6f7f5; /* light section background (alternating sections) */
-  --bg-light-card: #ffffff; /* card background on light canvas */
+  /* --- Canvas (Light Cream & White Surface) ------------------------------- */
+  --bg-void: #FAF7F2; /* light shade of cream canvas for the entire website */
+  --bg-surface: #FFFFFF; /* pure white cards and containers */
+  --bg-surface-2: #F3EFE6; /* raised warm cream surface / hover states */
+  --bg-light: #FAF7F2; /* light cream section background */
+  --bg-light-card: #FFFFFF; /* white card background */
+  --bg-navy: #0B1720; /* dark navy for high-contrast cards, accents & footer */
+  --bg-navy-surface: #111F2B;
 
-  /* --- Accent & risk semantics ------------------------------------------- *
-   * Lime is reserved for positive / primary / "go". It must never be used
-   * for destructive actions (revoke, delete) — those use --risk-red outline.
-   * Risk state is never carried by color alone; always paired with a label. */
-  --accent-lime: #b6ff3b; /* primary CTA / positive cash / "healthy" state */
-  --accent-lime-dim: #8fe01a; /* hover / pressed state of primary accent */
-  --risk-red: #ff5a4e; /* liquidity breach / negative / danger */
-  --risk-amber: #ffb238; /* caution / approaching risk / volatile */
-  --info-blue: #6fa8ff; /* neutral informational highlights, links on dark */
+  /* --- Accent Palette ----------------------------------------------------- */
+  --accent-lime: #24D6A0; /* Green: primary CTA / positive cash / active state */
+  --accent-lime-dim: #1EB889;
+  --accent-green: #24D6A0;
+  --accent-cyan: #26C6DA; /* Cyan: highlights, gradients & active elements */
+  --accent-cyan-dim: #00ACC1;
+  --accent-blue: #4C7DFF; /* Blue: links, pill badges, and actions */
+  --accent-navy: #0B1720; /* Navy: bold headers, badges & high contrast */
+
+  --risk-red: #FF4D6D; /* danger / shortfall */
+  --risk-amber: #FFB238; /* warning / watch */
+  --info-blue: #4C7DFF; /* informational blue */
 
   /* --- Text -------------------------------------------------------------- */
-  --text-onDark-hi: #f5f6f3; /* primary text on dark */
-  --text-onDark-lo: #9a9e97; /* secondary / muted text on dark */
-  --text-onLight-hi: #0b0d0b; /* primary text on light */
-  --text-onLight-lo: #2e332c; /* secondary / muted text on light (darker, crisp contrast) */
+  --text-onDark-hi: #0D1720; /* deep navy primary text on light cream */
+  --text-onDark-lo: #6E7D87; /* muted slate text on light cream */
+  --text-onLight-hi: #0D1720; /* deep navy primary text */
+  --text-onLight-lo: #6E7D87; /* muted slate text */
+  --text-onNavy-hi: #FFFFFF; /* white text on navy cards */
+  --text-onNavy-lo: #94A3B8; /* muted text on navy cards */
 
   /* --- Borders / dividers ------------------------------------------------ */
-  --border-onDark: #2a2d29;
-  --border-onLight: #e3e5e0;
+  --border-onDark: #E6E1D6; /* soft cream border */
+  --border-onLight: #E6E1D6;
+  --border-onNavy: #1F2E3A;
 
-  /* --- Data viz palette (forecast bands, charts) -------------------------- */
-  --viz-optimistic: #b6ff3b;
-  --viz-expected: #6fa8ff;
-  --viz-pessimistic: #ff5a4e;
-  --viz-grid: rgba(255, 255, 255, 0.06); /* on dark */
-  --viz-grid-onLight: rgba(0, 0, 0, 0.06);
+  /* --- Data viz palette --------------------------------------------------- */
+  --viz-optimistic: #24D6A0; /* Green */
+  --viz-expected: #26C6DA; /* Cyan */
+  --viz-pessimistic: #FF4D6D; /* Red */
+  --viz-grid: rgba(13, 23, 32, 0.06);
+  --viz-grid-onLight: rgba(13, 23, 32, 0.06);
 
-  /* --- Derived tints ------------------------------------------------------ *
-   * Low-alpha fills for badge backgrounds, chart bands and risk-state cards.
-   * Kept as tokens so the alpha level stays consistent product-wide.        */
-  --accent-lime-8: rgba(182, 255, 59, 0.08);
-  --accent-lime-16: rgba(182, 255, 59, 0.16);
-  --risk-red-8: rgba(255, 90, 78, 0.08);
-  --risk-red-16: rgba(255, 90, 78, 0.16);
-  --risk-amber-8: rgba(255, 178, 56, 0.08);
-  --risk-amber-16: rgba(255, 178, 56, 0.16);
-  --info-blue-8: rgba(111, 168, 255, 0.08);
-  --info-blue-16: rgba(111, 168, 255, 0.16);
+  /* --- Derived tints ------------------------------------------------------ */
+  --accent-lime-8: rgba(36, 214, 160, 0.1);
+  --accent-lime-16: rgba(36, 214, 160, 0.18);
+  --accent-cyan-8: rgba(38, 198, 218, 0.1);
+  --accent-cyan-16: rgba(38, 198, 218, 0.18);
+  --accent-blue-8: rgba(76, 125, 255, 0.1);
+  --accent-blue-16: rgba(76, 125, 255, 0.18);
+  --risk-red-8: rgba(255, 77, 109, 0.1);
+  --risk-red-16: rgba(255, 77, 109, 0.18);
+  --risk-amber-8: rgba(255, 178, 56, 0.1);
+  --risk-amber-16: rgba(255, 178, 56, 0.18);
+  --info-blue-8: rgba(76, 125, 255, 0.1);
+  --info-blue-16: rgba(76, 125, 255, 0.18);
 
   /* --- Typography -------------------------------------------------------- */
   --font-display: 'Outfit', 'Plus Jakarta Sans', 'Inter Tight Variable', 'Inter Tight', system-ui, sans-serif;
   --font-body: 'Plus Jakarta Sans', 'Inter Variable', 'Inter', system-ui, sans-serif;
 
-  /* --- Elevation ---------------------------------------------------------- *
-   * Card hover per PRD 2.4: 1px border brighten + 2-4px lift. No scale. */
-  --shadow-card-hover-dark: 0 4px 16px rgba(0, 0, 0, 0.5);
-  --shadow-card-hover-light: 0 4px 16px rgba(14, 16, 14, 0.08);
+  /* --- Elevation ---------------------------------------------------------- */
+  --shadow-card-hover-dark: 0 12px 32px -8px rgba(11, 23, 32, 0.08), 0 4px 12px -2px rgba(11, 23, 32, 0.04);
+  --shadow-card-hover-light: 0 12px 32px -8px rgba(11, 23, 32, 0.08), 0 4px 12px -2px rgba(11, 23, 32, 0.04);
 
-  /* --- Focus ring (PRD Section 7) ---------------------------------------- *
-   * info-blue at 2px offset — legible on both dark and light canvases.      */
-  --focus-ring: var(--info-blue);
+  /* --- Focus ring --------------------------------------------------------- */
+  --focus-ring: var(--accent-blue);
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
 
-  /* --- Motion (PRD 2.4) --------------------------------------------------- */
+  /* --- Motion ------------------------------------------------------------- */
   --motion-reveal-duration: 400ms;
   --motion-count-duration: 500ms;
   --motion-stagger: 60ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Reduced motion: collapse durations to ~0 so any CSS transition that slipped
-   past the JS guards also degrades to an instant, opacity-only change. */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-reveal-duration: 0.01ms;

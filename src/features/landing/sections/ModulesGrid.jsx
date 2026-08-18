@@ -137,7 +137,7 @@ export default function ModulesGrid() {
             <EyebrowLabel>Core capabilities</EyebrowLabel>
           </motion.div>
 
-          <motion.h2 className="mt-6 max-w-2xl font-display text-[34px] leading-tight tracking-[-0.02em] text-chalk-hi md:text-display-lg">
+          <motion.h2 className="mt-6 max-w-2xl font-display text-[34px] leading-tight tracking-[-0.02em] text-[#0D1720] md:text-display-lg font-bold">
             {HEADLINE_TEXT.split(' ').map((word, i) => (
               <motion.span
                 key={`${word}-${i}`}
@@ -154,7 +154,7 @@ export default function ModulesGrid() {
               hidden: { opacity: 0, y: 8 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.4, delay: 0.25 } },
             }}
-            className="mt-4 max-w-xl text-body-md text-chalk-lo leading-relaxed"
+            className="mt-4 max-w-xl text-body-md text-[#6E7D87] leading-relaxed"
           >
             {SUBHEAD_TEXT}
           </motion.p>
@@ -162,44 +162,55 @@ export default function ModulesGrid() {
 
         {/* 6 Capabilities Cards Grid with Multi-Column Parallax */}
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {MODULES.map((module, i) => (
-            <motion.div
-              key={module.title}
-              style={{ y: getColTransform(module.col) }}
-              initial={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.95 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, amount: 0.15 }}
-              transition={{
-                duration: prefersReduced ? 0.01 : 0.5,
-                delay: prefersReduced ? 0 : (i % 3) * 0.12,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              className="group flex h-full flex-col justify-between rounded-2xl border border-edge-dark/80 bg-surface p-7 transition-all hover:border-lime/50 hover:bg-surface-2 hover:shadow-2xl shadow-sm"
-            >
-              <div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-16 border border-lime/20 text-lime transition-transform group-hover:scale-110">
-                  <module.Icon className="h-6 w-6" aria-hidden="true" />
+          {MODULES.map((module, i) => {
+            const iconColors = [
+              { bg: 'bg-[#24D6A0]/15', border: 'border-[#24D6A0]/30', text: 'text-[#24D6A0]' },
+              { bg: 'bg-[#26C6DA]/15', border: 'border-[#26C6DA]/30', text: 'text-[#26C6DA]' },
+              { bg: 'bg-[#4C7DFF]/15', border: 'border-[#4C7DFF]/30', text: 'text-[#4C7DFF]' },
+              { bg: 'bg-[#24D6A0]/15', border: 'border-[#24D6A0]/30', text: 'text-[#24D6A0]' },
+              { bg: 'bg-[#26C6DA]/15', border: 'border-[#26C6DA]/30', text: 'text-[#26C6DA]' },
+              { bg: 'bg-[#4C7DFF]/15', border: 'border-[#4C7DFF]/30', text: 'text-[#4C7DFF]' },
+            ][i % 6];
+
+            return (
+              <motion.div
+                key={module.title}
+                style={{ y: getColTransform(module.col) }}
+                initial={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: false, amount: 0.15 }}
+                transition={{
+                  duration: prefersReduced ? 0.01 : 0.5,
+                  delay: prefersReduced ? 0 : (i % 3) * 0.12,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                className="group flex h-full flex-col justify-between rounded-2xl border border-edge-dark bg-surface p-7 transition-all hover:border-[#0B1720] hover:shadow-[0_16px_36px_rgba(11,23,32,0.08)] shadow-[0_2px_12px_rgba(11,23,32,0.04)]"
+              >
+                <div>
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconColors.bg} border ${iconColors.border} ${iconColors.text} transition-transform group-hover:scale-110`}>
+                    <module.Icon className="h-6 w-6" aria-hidden="true" />
+                  </div>
+
+                  <h3 className="mt-6 font-display text-heading-md font-bold text-[#0D1720] leading-snug">
+                    {module.title}
+                  </h3>
+
+                  <p className="mt-3 text-body-sm text-[#6E7D87] leading-relaxed">
+                    {module.body}
+                  </p>
                 </div>
 
-                <h3 className="mt-6 font-display text-heading-md font-semibold text-chalk-hi leading-snug">
-                  {module.title}
-                </h3>
-
-                <p className="mt-3 text-body-sm text-chalk-lo leading-relaxed">
-                  {module.body}
-                </p>
-              </div>
-
-              {/* Bottom Subtle Status Line */}
-              <div className="mt-6 pt-4 border-t border-edge-dark/50 flex items-center justify-between text-[11px] text-chalk-lo group-hover:text-chalk-hi transition-colors">
-                <span className="flex items-center gap-1.5 font-medium">
-                  <span className="h-1.5 w-1.5 rounded-full bg-lime" /> Active Signal
-                </span>
-                <span className="font-mono text-[10px] text-chalk-lo/60">MOD 0{i + 1}</span>
-              </div>
-            </motion.div>
-          ))}
+                {/* Bottom Subtle Status Line */}
+                <div className="mt-6 pt-4 border-t border-edge-dark flex items-center justify-between text-[11px] text-[#6E7D87] group-hover:text-[#0D1720] transition-colors">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#24D6A0]" /> Active Signal
+                  </span>
+                  <span className="font-mono text-[10px] text-[#6E7D87]">MOD 0{i + 1}</span>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
