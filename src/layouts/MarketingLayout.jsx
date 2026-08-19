@@ -16,27 +16,27 @@ import { LogoMark } from './AppShell';
  */
 
 const NAV_LINKS = [
-  { id: 'how-it-works', href: '/#how-it-works', label: 'HOW IT WORKS' },
-  { id: 'scenarios', href: '/#scenarios', label: 'SCENARIOS' },
-  { id: 'modules', href: '/#modules', label: 'CAPABILITIES' },
-  { id: 'trust', href: '/#trust', label: 'TRUST' },
-  { id: 'consent', href: '/#consent', label: 'CONSENT' },
-  { id: 'footer', href: '/#footer', label: 'CONTACT' },
+  { id: 'how-it-works', href: '/#how-it-works', label: 'How It Works' },
+  { id: 'scenarios', href: '/#scenarios', label: 'Scenarios' },
+  { id: 'modules', href: '/#modules', label: 'Capabilities' },
+  { id: 'trust', href: '/#trust', label: 'Trust' },
+  { id: 'consent', href: '/#consent', label: 'Consent' },
+  { id: 'footer', href: '/#footer', label: 'Contact' },
 ];
 
 export function CashTwinLogo({ className = 'h-5 w-5' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true" fill="none">
-      <rect x="7" y="2" width="10" height="10" rx="1.5" transform="rotate(45 12 7)" fill="#24D6A0" />
+      <rect x="7" y="2" width="10" height="10" rx="2" transform="rotate(45 12 7)" fill="#00b074" />
       <rect
         x="7"
         y="12"
         width="10"
         height="10"
-        rx="1.5"
+        rx="2"
         transform="rotate(45 12 17)"
-        stroke="#0B1720"
-        strokeWidth="1.75"
+        stroke="#0D1720"
+        strokeWidth="2"
       />
     </svg>
   );
@@ -76,19 +76,16 @@ export default function MarketingLayout() {
       const scrollY = window.scrollY;
       const windowHeight = window.innerHeight;
 
-      // When near top of page (hero section)
       if (scrollY < 160) {
         setActiveSection('');
         return;
       }
 
-      // When scrolled near bottom of document
       if (windowHeight + scrollY >= document.documentElement.scrollHeight - 80) {
         setActiveSection('footer');
         return;
       }
 
-      // Focus line at 32% of the viewport height
       const focusThreshold = windowHeight * 0.32;
       let currentSection = '';
 
@@ -103,7 +100,6 @@ export default function MarketingLayout() {
         }
       }
 
-      // Fallback: pick the closest section that has already entered the viewport
       if (!currentSection) {
         let minDistance = Infinity;
         for (const id of sectionIds) {
@@ -132,7 +128,6 @@ export default function MarketingLayout() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
-  // Handle hash scrolling when mounting or changing route
   useEffect(() => {
     if (location.hash) {
       const targetId = location.hash.replace('#', '');
@@ -179,126 +174,77 @@ export default function MarketingLayout() {
 
   return (
     <SmoothScrollProvider>
-      <div className="min-h-screen bg-void text-ink-hi flex flex-col justify-between">
+      <div className="min-h-screen bg-[#FAF7F2] text-[#0D1720] flex flex-col justify-between selection:bg-[#00b074]/20 selection:text-[#0D1720]">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-lime focus:px-4 focus:py-2 focus:text-label-xs focus:uppercase focus:text-ink-hi"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-[#00b074] focus:px-4 focus:py-2 focus:text-xs focus:font-medium focus:text-white"
         >
           Skip to content
         </a>
 
-        {/* Light Cream Top Navbar with Clean White Spotlight Bar */}
-        <header className="sticky top-0 z-40 bg-void/90 backdrop-blur-xl border-b border-edge-dark transition-all">
+        {/* Clean Top Navbar */}
+        <header className="sticky top-0 z-40 bg-[#FAF7F2]/90 backdrop-blur-md transition-all">
           <nav
             aria-label="Main"
-            className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 md:px-8"
+            className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 md:px-10"
           >
-            {/* Left brand & monospace nav links */}
-            <div className="flex items-center gap-5 md:gap-7">
+            {/* Left brand */}
+            <div className="flex items-center gap-8">
               <Link to="/" className="flex items-center gap-3 group">
-                <CashTwinLogo className="h-6 w-6 transition-transform group-hover:scale-110 duration-300" />
-                <span className="text-[18px] font-bold tracking-tight text-[#0D1720] font-sans">
+                <CashTwinLogo className="h-6 w-6 transition-transform group-hover:scale-105 duration-300" />
+                <span className="text-[19px] font-bold tracking-tight text-[#0D1720] font-sans">
                   CashTwin
                 </span>
               </Link>
 
-              <span className="text-[#6E7D87]/50 font-mono text-base select-none hidden md:inline-block" aria-hidden="true">
-                /
-              </span>
-
-              {/* Spotlight Navbar Navigation Container */}
+              {/* Navigation Links */}
               <div
                 ref={navContainerRef}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
-                className="group/nav relative hidden items-center gap-1 md:flex rounded-full border border-edge-dark bg-surface/95 p-1.5 backdrop-blur-md shadow-[0_4px_24px_rgba(11,23,32,0.06)]"
+                className="relative hidden items-center gap-6 md:flex ml-4"
               >
-                {/* Cursor Spotlight Radial Glow */}
-                <div
-                  className="pointer-events-none absolute -inset-px rounded-full transition-opacity duration-300 -z-10"
-                  style={{
-                    opacity: mousePosition.opacity,
-                    background: `radial-gradient(130px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(36, 214, 160, 0.2), transparent 80%)`,
-                  }}
-                />
-
                 {NAV_LINKS.map((link) => {
                   const isActive = activeSection === link.id;
-                  const isHovered = hoveredLink === link.id;
 
                   return (
                     <a
                       key={link.id}
                       href={link.href}
                       onClick={(e) => handleNavClick(e, link)}
-                      onMouseEnter={() => setHoveredLink(link.id)}
                       className={cn(
-                        'relative z-10 flex items-center px-3.5 py-1.5 font-mono text-[11px] lg:text-[12px] font-medium tracking-[0.08em] transition-colors duration-200 rounded-full uppercase select-none',
+                        'text-[14px] font-medium transition-colors duration-200 select-none',
                         isActive
-                          ? 'text-[#0D1720] font-bold'
-                          : 'text-[#6E7D87] hover:text-[#0D1720]',
+                          ? 'text-[#0D1720] font-semibold'
+                          : 'text-[#4A5568] hover:text-[#0D1720]',
                       )}
                     >
-                      {/* Active Spotlight Pill with Framer Motion Spring */}
-                      {isActive && (
-                        <motion.div
-                          layoutId="spotlight-active-pill"
-                          className="absolute inset-0 rounded-full bg-[#24D6A0]/15 border border-[#24D6A0]/40 shadow-[0_0_16px_rgba(36,214,160,0.2)] -z-10 overflow-hidden"
-                          transition={{
-                            type: 'spring',
-                            stiffness: 420,
-                            damping: 32,
-                          }}
-                        >
-                          {/* Top luminous accent line */}
-                          <span className="absolute inset-x-3 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#24D6A0] to-transparent" />
-                        </motion.div>
-                      )}
-
-                      {/* Hover Pill for inactive links */}
-                      {!isActive && isHovered && (
-                        <motion.div
-                          layoutId="spotlight-hover-pill"
-                          className="absolute inset-0 rounded-full bg-[#0B1720]/[0.04] border border-[#0B1720]/10 -z-10"
-                          transition={{
-                            type: 'spring',
-                            stiffness: 450,
-                            damping: 35,
-                          }}
-                        />
-                      )}
-
-                      {/* Active signal pulsating dot */}
-                      {isActive && (
-                        <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-[#24D6A0] shadow-[0_0_6px_#24D6A0] animate-pulse shrink-0" />
-                      )}
-
-                      <span className="relative z-10">{link.label}</span>
+                      {link.label}
                     </a>
                   );
                 })}
               </div>
             </div>
 
-            {/* Right Action buttons */}
-            <div className="flex items-center gap-3">
-              <Link
-                to="/app"
-                className="inline-flex items-center justify-center rounded-full bg-surface border border-edge-dark px-4 py-2 text-[13px] font-semibold text-[#0D1720] shadow-sm transition-all hover:bg-surface-2 hover:border-[#0B1720]"
-              >
-                Sign in
-              </Link>
-
+            {/* Right Action buttons: "Get started" black pill and "Sign in" */}
+            <div className="flex items-center gap-4">
               <Link
                 to="/onboarding"
-                className="hidden sm:inline-flex items-center justify-center rounded-full bg-[#0B1720] px-5 py-2 text-[13px] font-bold text-white shadow-md transition-all hover:bg-[#182635]"
+                className="hidden sm:inline-flex items-center justify-center rounded-full bg-[#0D1720] px-5 py-2.5 text-[14px] font-medium text-white shadow-sm transition-all hover:bg-[#1A2530]"
               >
                 Get started
               </Link>
 
+              <Link
+                to="/app"
+                className="inline-flex items-center justify-center px-3 py-2 text-[14px] font-medium text-[#0D1720] hover:text-[#00b074] transition-colors"
+              >
+                Sign in
+              </Link>
+
               <button
                 type="button"
-                className="p-1.5 text-[#6E7D87] hover:text-[#0D1720] md:hidden"
+                className="p-1.5 text-[#4A5568] hover:text-[#0D1720] md:hidden"
                 aria-expanded={menuOpen}
                 aria-label={menuOpen ? 'Close menu' : 'Open menu'}
                 onClick={() => setMenuOpen((v) => !v)}
