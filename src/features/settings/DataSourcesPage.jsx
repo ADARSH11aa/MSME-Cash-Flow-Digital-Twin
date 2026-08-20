@@ -97,14 +97,14 @@ export default function DataSourcesPage() {
           </p>
         </div>
 
-        <Button variant="secondary" size="md" className="rounded-lg">
+        <Button variant="secondary" size="md" className="rounded-control">
           <Plus className="h-4 w-4 mr-1.5" /> Connect new source
         </Button>
       </div>
 
       {/* Summary stats */}
       <div className="grid gap-5 sm:grid-cols-3">
-        <div className="rounded-xl border border-edge-dark bg-surface p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-card border border-edge-dark bg-surface p-6 shadow-card flex flex-col justify-between">
           <div>
             <p className="text-label-xs uppercase tracking-wider text-chalk-lo font-semibold">Connected Connectors</p>
             <p className="mt-2 font-display text-2xl font-bold text-chalk-hi tracking-tight">3 Active</p>
@@ -114,7 +114,7 @@ export default function DataSourcesPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-edge-dark bg-surface p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-card border border-edge-dark bg-surface p-6 shadow-card flex flex-col justify-between">
           <div>
             <p className="text-label-xs uppercase tracking-wider text-chalk-lo font-semibold">Total Records Monitored</p>
             <p className="mt-2 font-display text-2xl font-bold text-chalk-hi tracking-tight">233 Invoices &amp; POs</p>
@@ -122,7 +122,7 @@ export default function DataSourcesPage() {
           <p className="mt-3 text-[12px] text-chalk-lo font-normal">Across 5 primary customers</p>
         </div>
 
-        <div className="rounded-xl border border-edge-dark bg-surface p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-card border border-edge-dark bg-surface p-6 shadow-card flex flex-col justify-between">
           <div>
             <p className="text-label-xs uppercase tracking-wider text-chalk-lo font-semibold">Forecast Recompute</p>
             <p className="mt-2 font-display text-2xl font-bold text-lime tracking-tight">Automated (Real-time)</p>
@@ -139,11 +139,11 @@ export default function DataSourcesPage() {
           return (
             <div
               key={src.id}
-              className="rounded-xl border border-edge-dark bg-surface p-6 shadow-sm transition-all hover:border-edge-dark/80"
+              className="rounded-card border border-edge-dark bg-surface p-6 shadow-card transition-all hover:border-edge-dark/80"
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-2 border border-edge-dark text-lime">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-card bg-surface-2 border border-edge-dark text-lime">
                     <src.Icon className="h-5 w-5" />
                   </div>
 
@@ -176,7 +176,7 @@ export default function DataSourcesPage() {
                       size="sm"
                       disabled={isSyncing}
                       onClick={() => handleSync(src)}
-                      className="rounded-lg text-xs"
+                      className="rounded-control text-xs"
                     >
                       <RefreshCw className={`h-3.5 w-3.5 mr-1 ${isSyncing ? 'animate-spin text-lime' : ''}`} />
                       {isSyncing ? 'Syncing…' : 'Sync now'}

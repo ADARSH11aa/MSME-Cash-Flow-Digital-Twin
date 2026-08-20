@@ -1,7 +1,9 @@
 import cn from '@/lib/cn';
+import Card from '@/components/shared/Card';
 import EyebrowLabel from '@/components/shared/EyebrowLabel';
 import Figure from '@/components/shared/Figure';
 import Pill from '@/components/shared/Pill';
+import { Stagger, StaggerItem } from '@/components/shared/motion';
 import { formatCurrencyShort } from '@/lib/format';
 
 /**
@@ -9,12 +11,22 @@ import { formatCurrencyShort } from '@/lib/format';
  * buffer pressure — the three "why" cards behind the headline number.
  */
 export default function RiskBreakdownRow({ concentration, behaviour, buffer, minimumBuffer }) {
+  // No `items-start` on the grid: these three cards hold different amounts of
+  // content (a 4-row list, a 5-row table, a sparkline) and left to their
+  // natural heights they ended the row on three different baselines. The
+  // default `stretch` squares off the bottom edge.
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      <ConcentrationCard rows={concentration} />
-      <BehaviourCard rows={behaviour} />
-      <BufferCard series={buffer} minimumBuffer={minimumBuffer} />
-    </div>
+    <Stagger className="grid gap-4 lg:grid-cols-3">
+      <StaggerItem className="flex">
+        <ConcentrationCard rows={concentration} />
+      </StaggerItem>
+      <StaggerItem className="flex">
+        <BehaviourCard rows={behaviour} />
+      </StaggerItem>
+      <StaggerItem className="flex">
+        <BufferCard series={buffer} minimumBuffer={minimumBuffer} />
+      </StaggerItem>
+    </Stagger>
   );
 }
 
@@ -22,7 +34,7 @@ const BAR_TONES = ['bg-risk', 'bg-caution', 'bg-info', 'bg-lime', 'bg-chalk-lo']
 
 function ConcentrationCard({ rows }) {
   return (
-    <section className="border border-edge-dark bg-surface p-5">
+    <Card as="section" className="w-full">
       <EyebrowLabel tone="watch">Customer concentration</EyebrowLabel>
       <h3 className="mt-4 font-display text-heading-md text-chalk-hi">
         Where your receivables sit
@@ -55,13 +67,13 @@ function ConcentrationCard({ rows }) {
           </li>
         ))}
       </ul>
-    </section>
+    </Card>
   );
 }
 
 function BehaviourCard({ rows }) {
   return (
-    <section className="border border-edge-dark bg-surface p-5">
+    <Card as="section" className="w-full">
       <EyebrowLabel tone="risk">Payment behaviour</EyebrowLabel>
       <h3 className="mt-4 font-display text-heading-md text-chalk-hi">
         How late they actually pay
@@ -98,7 +110,7 @@ function BehaviourCard({ rows }) {
           </tbody>
         </table>
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -117,7 +129,7 @@ function BufferCard({ series, minimumBuffer }) {
   const breaches = lowest < minimumBuffer;
 
   return (
-    <section className="border border-edge-dark bg-surface p-5">
+    <Card as="section" className="w-full">
       <EyebrowLabel tone={breaches ? 'risk' : 'healthy'}>Cash buffer pressure</EyebrowLabel>
       <h3 className="mt-4 font-display text-heading-md text-chalk-hi">
         How close you get to the floor
@@ -162,6 +174,6 @@ function BufferCard({ series, minimumBuffer }) {
           Projected to fall below buffer
         </p>
       ) : null}
-    </section>
+    </Card>
   );
 }

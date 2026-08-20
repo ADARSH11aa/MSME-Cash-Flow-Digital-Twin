@@ -63,6 +63,10 @@ export default function AppShell() {
           <div
             className={cn(
               'min-h-screen transition-[padding] duration-300 ease-in-out',
+              // The mobile nav is a fixed bottom bar, so the last ~72px of
+              // every page was sitting underneath it — on the dashboard that
+              // hid the footer disclaimer entirely. Reserve the strip back.
+              'pb-[4.5rem] md:pb-0',
               expanded ? 'md:pl-60' : 'md:pl-16',
             )}
           >
@@ -97,7 +101,7 @@ function Sidebar({ expanded, onToggle }) {
       <div className="hidden md:flex md:w-full md:flex-col md:gap-4">
         <div className="flex items-center justify-between px-1.5 py-2 border-b border-edge-dark/60 pb-3">
           <Link to="/" className="flex items-center gap-2.5 min-w-0 overflow-hidden">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-2 border border-edge-dark">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-surface-2 border border-edge-dark">
               <LogoMark className="h-5 w-5" />
             </span>
             {expanded ? (
@@ -112,7 +116,7 @@ function Sidebar({ expanded, onToggle }) {
           <button
             type="button"
             onClick={onToggle}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-edge-dark bg-surface-2 text-chalk-lo hover:text-chalk-hi hover:border-lime/40 transition-colors"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-edge-dark bg-surface-2 text-chalk-lo hover:text-chalk-hi hover:border-lime/40 transition-colors"
             title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
             aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
           >
@@ -130,10 +134,16 @@ function Sidebar({ expanded, onToggle }) {
                 end={end}
                 className={({ isActive }) =>
                   cn(
-                    'group flex h-10 w-full items-center gap-3 rounded-lg px-2.5 transition-all text-body-sm font-medium',
+                    'group relative flex h-10 w-full items-center gap-3 rounded-control px-2.5 text-body-sm font-medium',
+                    'transition-colors duration-hover ease-out',
+                    // The rail is the selected marker; it grows out of the left
+                    // edge so the row itself does not have to shift or gain a
+                    // border that changes its height.
+                    'before:absolute before:left-0 before:top-1/2 before:h-0 before:w-[3px] before:-translate-y-1/2',
+                    'before:rounded-r-full before:bg-lime before:transition-[height] before:duration-200 before:ease-out',
                     isActive
-                      ? 'bg-lime-16 text-lime font-semibold border border-lime/30'
-                      : 'text-chalk-lo hover:bg-surface-2 hover:text-chalk-hi border border-transparent',
+                      ? 'bg-lime-8 font-semibold text-chalk-hi before:h-5'
+                      : 'text-chalk-lo hover:bg-surface-2 hover:text-chalk-hi',
                   )
                 }
               >
@@ -165,8 +175,9 @@ function Sidebar({ expanded, onToggle }) {
             end={end}
             className={({ isActive }) =>
               cn(
-                'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors',
-                isActive ? 'bg-lime-16 text-lime' : 'text-chalk-lo hover:text-chalk-hi',
+                'flex h-10 w-10 shrink-0 items-center justify-center rounded-control transition-colors',
+                'transition-colors duration-hover ease-out',
+                isActive ? 'bg-lime-8 text-lime-ink' : 'text-chalk-lo hover:text-chalk-hi',
               )
             }
           >
@@ -178,7 +189,7 @@ function Sidebar({ expanded, onToggle }) {
 
       {/* Desktop User Footer Profile */}
       <div className="hidden md:flex md:w-full md:flex-col md:gap-2 border-t border-edge-dark/60 pt-3">
-        <div className="flex items-center justify-between gap-2 px-1 py-1 rounded-lg bg-surface-2/60 border border-edge-dark/40">
+        <div className="flex items-center justify-between gap-2 px-1 py-1 rounded-control bg-surface-2/60 border border-edge-dark/40">
           <div className="flex items-center gap-2.5 min-w-0 overflow-hidden">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-lime/20 border border-lime/40 text-lime font-display font-bold text-xs">
               MH
@@ -222,7 +233,10 @@ function LineageDrawer({ open, onOpenChange, lineage }) {
           ) : (
             <div className="space-y-2" aria-busy="true">
               {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="h-12 animate-pulse border border-edge-dark bg-surface-2" />
+                <div
+                  key={i}
+                  className="h-12 animate-pulse rounded-control border border-edge-dark bg-surface-2"
+                />
               ))}
             </div>
           )}

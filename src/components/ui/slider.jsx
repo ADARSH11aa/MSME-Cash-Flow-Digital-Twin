@@ -19,29 +19,35 @@ const Slider = forwardRef(function Slider({ className, tone = 'accent', ...props
     risk: 'bg-risk',
   }[tone];
 
+  // The thumb carries a soft halo in its own tone so the grab target reads as
+  // interactive against a white panel, where a hairline ring disappears.
   const thumbTone = {
-    accent: 'border-lime',
-    caution: 'border-caution',
-    risk: 'border-risk',
+    accent: 'border-lime shadow-[0_0_0_4px_var(--accent-lime-8)]',
+    caution: 'border-caution shadow-[0_0_0_4px_var(--risk-amber-8)]',
+    risk: 'border-risk shadow-[0_0_0_4px_var(--risk-red-8)]',
   }[tone];
 
   return (
     <SliderPrimitive.Root
       ref={ref}
       className={cn(
-        'relative flex w-full touch-none select-none items-center py-2',
+        'group relative flex w-full touch-none select-none items-center py-2',
         'data-[disabled]:opacity-50',
         className,
       )}
       {...props}
     >
-      <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-surface-2">
-        <SliderPrimitive.Range className={cn('absolute h-full', rangeTone)} />
+      <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-surface-2">
+        <SliderPrimitive.Range
+          className={cn('absolute h-full rounded-full transition-colors', rangeTone)}
+        />
       </SliderPrimitive.Track>
       <SliderPrimitive.Thumb
         className={cn(
-          'block h-4 w-4 rounded-full border-2 bg-void transition-colors',
-          'hover:bg-surface-2 disabled:pointer-events-none',
+          'block h-4 w-4 cursor-grab rounded-full border-2 bg-surface',
+          'transition-[transform,box-shadow,border-color] duration-150 ease-out',
+          'hover:scale-110 active:scale-105 active:cursor-grabbing',
+          'disabled:pointer-events-none',
           thumbTone,
         )}
       />

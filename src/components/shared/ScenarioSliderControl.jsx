@@ -22,6 +22,7 @@ import Slider from '@/components/ui/slider';
  *   hint?: string,
  *   minLabel?: string,
  *   maxLabel?: string,
+ *   dirty?: boolean,
  *   className?: string,
  * }} props
  */
@@ -37,23 +38,43 @@ export default function ScenarioSliderControl({
   hint,
   minLabel,
   maxLabel,
+  dirty = false,
   className,
 }) {
   const id = useId();
 
+  // The read-out is a tinted pill rather than bare colored text: at 13px on a
+  // white panel, tone alone was too faint to register as the live value.
   const valueTone = {
-    accent: 'text-lime',
-    caution: 'text-caution',
-    risk: 'text-risk',
+    accent: 'bg-lime-8 text-lime',
+    caution: 'bg-caution-8 text-caution',
+    risk: 'bg-risk-8 text-risk',
   }[tone];
 
   return (
     <div className={cn('space-y-2', className)}>
-      <div className="flex items-baseline justify-between gap-3">
-        <label htmlFor={id} className="text-label-xs uppercase text-chalk-lo">
+      <div className="flex items-center justify-between gap-3">
+        <label
+          htmlFor={id}
+          className="flex items-center gap-1.5 text-label-xs uppercase text-chalk-lo"
+        >
           {label}
+          {/* Marks a slider moved off baseline, so a scenario's inputs are
+              scannable without comparing every value to its default. */}
+          {dirty ? (
+            <span
+              className="h-1.5 w-1.5 shrink-0 rounded-full bg-info"
+              aria-hidden="true"
+            />
+          ) : null}
         </label>
-        <span data-numeric className={cn('tabular text-body-md', valueTone)}>
+        <span
+          data-numeric
+          className={cn(
+            'tabular shrink-0 rounded-full px-2.5 py-0.5 text-body-sm font-semibold transition-colors',
+            valueTone,
+          )}
+        >
           {formatValue(value)}
         </span>
       </div>
@@ -71,50 +92,13 @@ export default function ScenarioSliderControl({
       />
 
       {minLabel || maxLabel ? (
-        <div className="flex justify-between text-label-xs uppercase text-chalk-lo">
+        <div className="flex justify-between text-label-xs uppercase text-chalk-lo/70">
           <span>{minLabel}</span>
           <span>{maxLabel}</span>
         </div>
       ) : null}
 
       {hint ? <p className="text-body-sm text-chalk-lo">{hint}</p> : null}
-    </div>
-  );
-}
-
-/**
- * Preset quick-scenario chips (PRD 3.5) — one click applies a whole named
- * shock from the concept doc's example table.
- *
- * @param {{
- *   presets: Array<{ id: string, label: string }>,
- *   activeId?: string|null,
- *   onApply: (preset: object) => void,
- *   className?: string,
- * }} props
- */
-export function PresetChipRow({ presets, activeId, onApply, className }) {
-  return (
-    <div className={cn('flex flex-wrap gap-2', className)}>
-      {presets.map((preset) => {
-        const active = preset.id === activeId;
-        return (
-          <button
-            key={preset.id}
-            type="button"
-            aria-pressed={active}
-            onClick={() => onApply(preset)}
-            className={cn(
-              'rounded-full border px-3 py-1.5 text-label-xs uppercase transition-colors',
-              active
-                ? 'border-lime bg-lime-16 text-lime'
-                : 'border-edge-dark text-chalk-lo hover:border-chalk-lo hover:text-chalk-hi',
-            )}
-          >
-            {preset.label}
-          </button>
-        );
-      })}
     </div>
   );
 }

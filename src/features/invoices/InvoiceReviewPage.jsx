@@ -1,10 +1,12 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, UploadCloud } from 'lucide-react';
 import { useState } from 'react';
 import Button from '@/components/shared/Button';
 import DataTable from '@/components/shared/DataTable';
-import DisclaimerBar from '@/components/shared/DisclaimerBar';
-import EyebrowLabel from '@/components/shared/EyebrowLabel';
+import PageContainer from '@/components/shared/PageContainer';
+import PageHeader from '@/components/shared/PageHeader';
 import Pill from '@/components/shared/Pill';
+import { StaggerItem } from '@/components/shared/motion';
 import { useToast } from '@/components/shared/Toast';
 import useAsync from '@/hooks/useAsync';
 import { formatCurrency, formatDateShort } from '@/lib/format';
@@ -47,105 +49,115 @@ export default function InvoiceReviewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-void">
-      <div className="space-y-6 px-5 py-8 md:px-8">
-        <header className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <EyebrowLabel filled>
-              Imported data
-            </EyebrowLabel>
-            <h1 className="mt-3 font-display text-display-md text-chalk-hi">Review your invoices</h1>
-            <p className="mt-1 max-w-2xl text-body-sm text-chalk-lo">
-              Check what we read from your documents. Correcting any value re-runs your forecast
-              straight away.
-            </p>
-          </div>
+    <PageContainer>
+      <PageHeader
+        eyebrow="Imported data"
+        title="Review your invoices"
+        subtitle="Check what we read from your documents. Correcting any value re-runs your forecast straight away."
+        actions={
           <Button variant="secondary">
             <UploadCloud className="h-4 w-4" /> Import more
           </Button>
-        </header>
+        }
+      />
 
+      {/* AnimatePresence so the confirmation slides in on a correction and
+          out again when it is replaced, instead of popping between values. */}
+      <AnimatePresence mode="wait">
         {lastEdit ? (
-          <div className="flex items-center gap-3 border border-edge-dark bg-surface-2 px-4 py-3 rounded-lg shadow-sm">
+          <motion.div
+            key={`${lastEdit.id}-${lastEdit.after}`}
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-wrap items-center gap-3 rounded-card border border-edge-dark bg-surface-2 px-4 py-3 shadow-card"
+          >
             <span className="text-label-xs uppercase text-chalk-lo">Last correction</span>
-            <span data-numeric className="flex items-center gap-2 text-body-sm tabular text-chalk-hi">
-              {lastEdit.id}: <span className="line-through text-chalk-lo">{formatCurrency(lastEdit.before)}</span>
-              <ArrowRight className="h-3.5 w-3.5 text-lime" aria-hidden="true" />
-              <span className="text-lime font-semibold">{formatCurrency(lastEdit.after)}</span>
+            <span
+              data-numeric
+              className="flex items-center gap-2 text-body-sm tabular text-chalk-hi"
+            >
+              {lastEdit.id}:{' '}
+              <span className="text-chalk-lo line-through">
+                {formatCurrency(lastEdit.before)}
+              </span>
+              <ArrowRight className="h-3.5 w-3.5 text-lime-ink" aria-hidden="true" />
+              <span className="font-semibold text-lime-ink">
+                {formatCurrency(lastEdit.after)}
+              </span>
             </span>
-          </div>
+          </motion.div>
         ) : null}
+      </AnimatePresence>
 
-        {loading && !data ? (
-          <div className="h-96 animate-pulse border border-edge-dark bg-surface rounded-xl" />
-        ) : (
-          <div className="rounded-xl border border-edge-dark overflow-hidden shadow-sm">
-            <DataTable
-              caption="Imported invoices, with OCR confidence and editable amounts"
-              rows={invoices}
-              onCellEdit={handleEdit}
-              columns={[
-                { key: 'id', header: 'Invoice', sortable: true, width: '120px' },
-                { key: 'customer', header: 'Customer', sortable: true },
-                {
-                  key: 'amount',
-                  header: 'Amount',
-                  sortable: true,
-                  align: 'right',
-                  editable: true,
-                  render: (row) => (
-                    <span data-numeric className="tabular font-medium">
-                      {formatCurrency(row.amount)}
-                      {row.importedAmount !== row.amount ? (
-                        <span className="ml-2 text-body-sm text-chalk-lo line-through">
-                          {formatCurrency(row.importedAmount)}
-                        </span>
-                      ) : null}
-                    </span>
-                  ),
-                },
-                {
-                  key: 'confidence',
-                  header: 'Confidence',
-                  render: (row) => <Pill status={row.confidence} />,
-                },
-                {
-                  key: 'dueDate',
-                  header: 'Due date',
-                  sortable: true,
-                  render: (row) => (
-                    <span data-numeric className="tabular">
-                      {formatDateShort(row.dueDate)}
-                    </span>
-                  ),
-                },
-                {
-                  key: 'status',
-                  header: 'Status',
-                  render: (row) => (
-                    <span className="flex items-center gap-2">
-                      <Pill status={row.status} />
-                      {row.daysOverdue > 0 ? (
-                        <span data-numeric className="tabular text-body-sm text-risk font-semibold">
-                          +{row.daysOverdue}d
-                        </span>
-                      ) : null}
-                    </span>
-                  ),
-                },
-                { key: 'source', header: 'Source' },
-              ]}
-            />
-          </div>
-        )}
+      {loading && !data ? (
+        <div className="h-96 animate-pulse rounded-card border border-edge-dark bg-surface" />
+      ) : (
+        <StaggerItem index={1}>
+          <DataTable
+            caption="Imported invoices, with OCR confidence and editable amounts"
+            rows={invoices}
+            onCellEdit={handleEdit}
+            columns={[
+              { key: 'id', header: 'Invoice', sortable: true, width: '120px' },
+              { key: 'customer', header: 'Customer', sortable: true },
+              {
+                key: 'amount',
+                header: 'Amount',
+                sortable: true,
+                align: 'right',
+                editable: true,
+                render: (row) => (
+                  <span data-numeric className="tabular font-medium">
+                    {formatCurrency(row.amount)}
+                    {row.importedAmount !== row.amount ? (
+                      <span className="ml-2 text-body-sm text-chalk-lo line-through">
+                        {formatCurrency(row.importedAmount)}
+                      </span>
+                    ) : null}
+                  </span>
+                ),
+              },
+              {
+                key: 'confidence',
+                header: 'Confidence',
+                render: (row) => <Pill status={row.confidence} />,
+              },
+              {
+                key: 'dueDate',
+                header: 'Due date',
+                sortable: true,
+                render: (row) => (
+                  <span data-numeric className="tabular">
+                    {formatDateShort(row.dueDate)}
+                  </span>
+                ),
+              },
+              {
+                key: 'status',
+                header: 'Status',
+                render: (row) => (
+                  <span className="flex items-center gap-2">
+                    <Pill status={row.status} />
+                    {row.daysOverdue > 0 ? (
+                      <span data-numeric className="tabular text-body-sm font-semibold text-risk-ink">
+                        +{row.daysOverdue}d
+                      </span>
+                    ) : null}
+                  </span>
+                ),
+              },
+              { key: 'source', header: 'Source' },
+            ]}
+          />
+        </StaggerItem>
+      )}
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-edge-dark pt-6">
-          <p className="text-body-sm text-chalk-lo">
-            Amounts are editable — select any figure in the Amount column to correct it.
-          </p>
-          <DisclaimerBar />
-        </div>
-      </div>
-    </div>
+      {/* The shell footer already carries the disclaimer on every screen. */}
+      <p className="border-t border-edge-dark pt-6 text-body-sm text-chalk-lo">
+        Amounts are editable — select any figure in the Amount column to correct it.
+      </p>
+    </PageContainer>
   );
 }

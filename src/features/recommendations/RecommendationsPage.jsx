@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import DataTable from '@/components/shared/DataTable';
 import DisclaimerBar from '@/components/shared/DisclaimerBar';
-import EyebrowLabel from '@/components/shared/EyebrowLabel';
 import Figure from '@/components/shared/Figure';
+import PageContainer from '@/components/shared/PageContainer';
+import PageHeader from '@/components/shared/PageHeader';
 import Pill from '@/components/shared/Pill';
 import RecommendationCard from '@/components/shared/RecommendationCard';
+import { Stagger, StaggerItem } from '@/components/shared/motion';
 import useAsync from '@/hooks/useAsync';
 import { getRecommendations } from '@/mocks/api/recommendations';
 
@@ -20,37 +22,37 @@ export default function RecommendationsPage() {
   const simulate = (rec) => navigate(`/app/scenarios?apply=${rec.id}`);
 
   return (
-    <div className="space-y-6 px-5 py-8 md:px-8">
-      <header>
-        <EyebrowLabel>Recovery options</EyebrowLabel>
-        <h1 className="mt-3 font-display text-display-md text-chalk-hi">
-          Your cheapest ways out, in order
-        </h1>
-        <p className="mt-2 max-w-2xl text-body-sm text-chalk-lo">
-          Actions that cost nothing come first. Financing is shown last, and only so you can compare
-          it — not because we think you should take it.
-        </p>
-      </header>
+    <PageContainer>
+      <PageHeader
+        eyebrow="Recovery options"
+        title="Your cheapest ways out, in order"
+        subtitle="Actions that cost nothing come first. Financing is shown last, and only so you can compare it — not because we think you should take it."
+      />
 
       {/* Escalated to a banner here rather than only the footer: this is the
           screen where an owner is closest to acting (PRD 3.6). */}
       <DisclaimerBar variant="banner" />
 
       {loading || !recommendations ? (
-        <div className="grid gap-4 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-96 animate-pulse border border-edge-dark bg-surface" />
+            <div
+              key={i}
+              className="h-96 animate-pulse rounded-card border border-edge-dark bg-surface"
+            />
           ))}
         </div>
       ) : (
         <>
-          <div className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Stagger className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {recommendations.map((rec) => (
-              <RecommendationCard key={rec.id} recommendation={rec} onSimulate={simulate} />
+              <StaggerItem key={rec.id} className="flex">
+                <RecommendationCard recommendation={rec} onSimulate={simulate} />
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
 
-          <section className="space-y-3">
+          <StaggerItem as="section" index={4} className="space-y-3">
             <h2 className="font-display text-heading-md text-chalk-hi">Compare side by side</h2>
             <DataTable
               caption="Recovery strategies compared"
@@ -64,7 +66,7 @@ export default function RecommendationsPage() {
                   align: 'right',
                   render: (row) =>
                     row.illustrativeCost === 0 ? (
-                      <span data-numeric className="tabular text-lime">
+                      <span data-numeric className="tabular font-medium text-lime-ink">
                         ₹0
                       </span>
                     ) : (
@@ -104,9 +106,9 @@ export default function RecommendationsPage() {
                 },
               ]}
             />
-          </section>
+          </StaggerItem>
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

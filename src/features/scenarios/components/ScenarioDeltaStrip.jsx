@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, CalendarClock, Lightbulb, Wallet } from 'lucide-react';
 import cn from '@/lib/cn';
 import Figure from '@/components/shared/Figure';
 import useCountUp from '@/hooks/useCountUp';
@@ -8,7 +8,18 @@ import { riskToneForDays } from '@/lib/format';
  * The before/after delta strip (PRD 3.5) — the product's key moment, so the
  * numbers tween rather than snap (PRD 2.4). `useCountUp` no-ops entirely under
  * prefers-reduced-motion.
+ *
+ * The "before" figure only renders when the scenario actually moved it. Showing
+ * `12 → 12` with the first value struck through read as a rendering fault
+ * rather than as "nothing changed".
  */
+
+const TONE = {
+  healthy: { text: 'text-lime-ink', rule: 'bg-lime', wash: 'bg-lime-8 text-lime-ink', border: 'border-edge-dark' },
+  watch: { text: 'text-caution-ink', rule: 'bg-caution', wash: 'bg-caution-8 text-caution-ink', border: 'border-caution/40' },
+  risk: { text: 'text-risk-ink', rule: 'bg-risk', wash: 'bg-risk-8 text-risk-ink', border: 'border-risk/40' },
+};
+
 export default function ScenarioDeltaStrip({ result }) {
   const {
     daysToBreachBefore,
@@ -23,104 +34,182 @@ export default function ScenarioDeltaStrip({ result }) {
       : null;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      <DeltaCard
-        label="Days to breach"
+    <div className="grid gap-4 lg:grid-cols-3">
+      <DaysCard
         before={daysToBreachBefore}
         after={daysToBreachAfter}
         delta={daysDelta}
-        unit="days"
-        tone={riskToneForDays(daysToBreachAfter).tone}
-        stateLabel={riskToneForDays(daysToBreachAfter).label}
+        risk={riskToneForDays(daysToBreachAfter)}
       />
 
-      <CashCard
-        label="Projected cash"
-        before={projectedCashBefore}
-        after={projectedCashAfter}
-      />
+      <CashCard before={projectedCashBefore} after={projectedCashAfter} />
 
-      <div className="flex flex-col justify-center gap-2 border border-edge-dark bg-surface p-5">
-        <span className="text-label-xs uppercase text-chalk-lo">What this means</span>
-        <p className="text-body-sm text-chalk-hi">
-          {daysDelta == null
-            ? 'This scenario does not push you below your buffer inside the horizon.'
-            : daysDelta < 0
-              ? `You lose ${Math.abs(daysDelta)} days of runway under these assumptions.`
-              : daysDelta > 0
-                ? `You gain ${daysDelta} days of runway under these assumptions.`
-                : 'Runway is unchanged under these assumptions.'}
-        </p>
-      </div>
+      <MeaningCard daysDelta={daysDelta} />
     </div>
   );
 }
 
-function DeltaCard({ label, before, after, delta, unit, tone, stateLabel }) {
-  const animated = useCountUp(after ?? 0);
-
-  const toneText = {
-    healthy: 'text-lime',
-    watch: 'text-caution',
-    risk: 'text-risk',
-  }[tone];
-
+/** Shared card chrome: top rule in the card's tone, then a labelled header row. */
+function DeltaCard({ tone, rule, icon: Icon, label, badge, children }) {
   return (
     <div
       className={cn(
-        'min-w-0 border bg-surface p-5',
-        tone === 'risk' ? 'border-risk/40' : tone === 'watch' ? 'border-caution/40' : 'border-edge-dark',
+        'relative min-w-0 overflow-hidden rounded-card border bg-surface p-5 pt-6',
+        'transition-shadow duration-200 ease-out hover:shadow-card-light',
+        tone.border,
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-label-xs uppercase text-chalk-lo">{label}</span>
-        <span className={cn('text-label-xs uppercase', toneText)}>{stateLabel}</span>
+      {/* A 3px tone rule gives each card a read at a glance, which a hairline
+          cream border on white cannot. */}
+      <span className={cn('absolute inset-x-0 top-0 h-[3px]', rule)} aria-hidden="true" />
+
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <span className="flex min-w-0 items-center gap-2 text-label-xs uppercase text-chalk-lo">
+          <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {label}
+        </span>
+        {badge}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-baseline gap-3">
-        <span data-numeric className="tabular text-heading-md text-chalk-lo line-through">
-          {before ?? '—'}
-        </span>
-        <ArrowRight className="h-4 w-4 shrink-0 text-chalk-lo" aria-hidden="true" />
-        <span data-numeric className={cn('font-display text-display-lg tabular', toneText)}>
-          {after == null ? '—' : Math.round(animated)}
-        </span>
-        <span className="text-body-sm text-chalk-lo">{unit}</span>
-      </div>
-
-      {delta != null && delta !== 0 ? (
-        <p className={cn('mt-2 text-body-sm', delta < 0 ? 'text-risk' : 'text-lime')}>
-          <span data-numeric className="tabular">
-            {delta > 0 ? '+' : ''}
-            {delta}
-          </span>{' '}
-          {unit} {delta < 0 ? 'sooner' : 'later'}
-        </p>
-      ) : null}
+      {children}
     </div>
   );
 }
 
-function CashCard({ label, before, after }) {
-  const delta = after - before;
+function DaysCard({ before, after, delta, risk }) {
+  const tone = TONE[risk.tone];
+  const animated = useCountUp(after ?? 0);
+  const changed = delta != null && delta !== 0;
 
   return (
-    <div className="min-w-0 border border-edge-dark bg-surface p-5">
-      <span className="text-label-xs uppercase text-chalk-lo">{label}</span>
-
-      <div className="mt-4 flex flex-wrap items-baseline gap-3">
-        <span data-numeric className="tabular text-heading-md text-chalk-lo line-through">
-          <Figure value={before} variant="currencyShort" />
+    <DeltaCard
+      tone={tone}
+      rule={tone.rule}
+      icon={CalendarClock}
+      label="Days to breach"
+      badge={
+        <span className={cn('shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-label-xs uppercase', tone.wash)}>
+          {risk.label}
         </span>
-        <ArrowRight className="h-4 w-4 shrink-0 text-chalk-lo" aria-hidden="true" />
-        <span className={cn('font-display text-display-md', delta < 0 ? 'text-risk' : 'text-lime')}>
+      }
+    >
+      <div className="mt-4 flex flex-wrap items-baseline gap-2">
+        {changed ? (
+          <>
+            <span data-numeric className="tabular text-heading-md text-chalk-lo/70 line-through">
+              {before}
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 self-center text-chalk-lo/60" aria-hidden="true" />
+          </>
+        ) : null}
+        <span
+          data-numeric
+          className={cn('font-display text-display-lg leading-none tabular', tone.text)}
+        >
+          {after == null ? '—' : Math.round(animated)}
+        </span>
+        <span className="font-sans text-heading-md font-medium text-chalk-lo">days</span>
+      </div>
+
+      {changed ? (
+        <p
+          className={cn(
+            'mt-3 inline-flex items-center rounded-full px-2 py-0.5 text-body-sm font-medium',
+            delta < 0 ? 'bg-risk-8 text-risk-ink' : 'bg-lime-8 text-lime-ink',
+          )}
+        >
+          <span data-numeric className="tabular">
+            {delta > 0 ? '+' : ''}
+            {delta}
+          </span>
+          <span className="ml-1">days {delta < 0 ? 'sooner' : 'later'}</span>
+        </p>
+      ) : (
+        <p className="mt-3 text-body-sm text-chalk-lo">Unchanged by this scenario</p>
+      )}
+    </DeltaCard>
+  );
+}
+
+function CashCard({ before, after }) {
+  const delta = after - before;
+  const changed = delta !== 0;
+  const positive = delta >= 0;
+
+  return (
+    <DeltaCard
+      tone={{ border: changed && !positive ? 'border-risk/40' : 'border-edge-dark' }}
+      rule={changed ? (positive ? 'bg-lime' : 'bg-risk') : 'bg-edge-dark'}
+      icon={Wallet}
+      label="Projected cash"
+    >
+      <div className="mt-4 flex flex-wrap items-baseline gap-2">
+        {changed ? (
+          <>
+            <span data-numeric className="tabular text-heading-md text-chalk-lo/70 line-through">
+              <Figure value={before} variant="currencyShort" />
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 self-center text-chalk-lo/60" aria-hidden="true" />
+          </>
+        ) : null}
+        <span
+          className={cn(
+            'font-display text-display-lg',
+            changed ? (positive ? 'text-lime-ink' : 'text-risk-ink') : 'text-chalk-hi',
+          )}
+        >
           <Figure value={after} variant="currencyShort" animate />
         </span>
       </div>
 
-      <p className={cn('mt-2 text-body-sm', delta < 0 ? 'text-risk' : 'text-lime')}>
-        <Figure value={delta} variant="delta" /> at end of horizon
-      </p>
+      {changed ? (
+        <p
+          className={cn(
+            'mt-3 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-body-sm font-medium',
+            positive ? 'bg-lime-8 text-lime-ink' : 'bg-risk-8 text-risk-ink',
+          )}
+        >
+          <Figure value={delta} variant="delta" />
+          <span>at end of horizon</span>
+        </p>
+      ) : (
+        <p className="mt-3 text-body-sm text-chalk-lo">Unchanged at end of horizon</p>
+      )}
+    </DeltaCard>
+  );
+}
+
+/**
+ * The plain-language read-out. It sits on the same white surface as the two
+ * number cards so the strip reads as one row; the gradient rule and the larger
+ * display type carry the emphasis instead of a dark ground.
+ */
+function MeaningCard({ daysDelta }) {
+  const sentence =
+    daysDelta == null
+      ? 'This scenario does not push you below your buffer inside the horizon.'
+      : daysDelta < 0
+        ? `You lose ${Math.abs(daysDelta)} days of runway under these assumptions.`
+        : daysDelta > 0
+          ? `You gain ${daysDelta} days of runway under these assumptions.`
+          : 'Runway is unchanged under these assumptions.';
+
+  return (
+    <div
+      className={cn(
+        'relative min-w-0 overflow-hidden rounded-card border border-edge-dark bg-surface p-5 pt-6',
+        'transition-shadow duration-200 ease-out hover:shadow-card-light',
+      )}
+    >
+      <span
+        className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-lime via-cyan to-info"
+        aria-hidden="true"
+      />
+      <span className="flex items-center gap-2 text-label-xs uppercase text-chalk-lo">
+        <Lightbulb className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        What this means
+      </span>
+      <p className="mt-4 font-display text-heading-md leading-snug text-chalk-hi">{sentence}</p>
     </div>
   );
 }

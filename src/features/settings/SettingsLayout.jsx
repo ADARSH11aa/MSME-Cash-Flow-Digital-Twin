@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import cn from '@/lib/cn';
-import DisclaimerBar from '@/components/shared/DisclaimerBar';
-import EyebrowLabel from '@/components/shared/EyebrowLabel';
+import PageContainer from '@/components/shared/PageContainer';
+import PageHeader from '@/components/shared/PageHeader';
 
 /**
  * Settings shell (PRD 3.8) — light canvas, docs-style left nav, reusing the
@@ -18,57 +18,53 @@ const NAV = [
 
 export default function SettingsLayout() {
   return (
-    <div className="min-h-screen bg-void">
-      <div className="px-5 py-8 md:px-8">
-        <header className="mb-8">
-          <EyebrowLabel filled>
-            Settings
-          </EyebrowLabel>
-          <h1 className="mt-3 font-display text-display-md text-chalk-hi">
-            Account, Data &amp; Privacy Settings
-          </h1>
-        </header>
+    <PageContainer>
+      <PageHeader
+        eyebrow="Settings"
+        title="Account, data & privacy"
+        subtitle="Control what CashTwin can see, who it can tell, and what it keeps."
+      />
 
-        <div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
-          <nav aria-label="Settings" className="lg:sticky lg:top-6 lg:self-start">
-            <ul>
-              {NAV.map((item) => (
-                <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    end={item.end}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-2.5 border-b py-3 text-body-sm transition-colors',
-                        isActive
-                          ? 'border-lime text-lime font-semibold'
-                          : 'border-edge-dark text-chalk-lo hover:text-chalk-hi',
-                      )
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
-                        <span
-                          className={cn('h-1.5 w-1.5 shrink-0 rounded-full', isActive ? 'bg-lime' : 'bg-edge-dark')}
-                          aria-hidden="true"
-                        />
-                        {item.label}
-                      </>
-                    )}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
+      <div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+        <nav aria-label="Settings" className="lg:sticky lg:top-6 lg:self-start">
+          <ul className="space-y-1">
+            {NAV.map((item) => (
+              <li key={item.to}>
+                <NavLink
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-2.5 rounded-control px-3 py-2.5 text-body-sm',
+                      'transition-colors duration-hover ease-out',
+                      isActive
+                        ? 'bg-lime-8 font-semibold text-chalk-hi'
+                        : 'text-chalk-lo hover:bg-surface-2 hover:text-chalk-hi',
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span
+                        className={cn('h-1.5 w-1.5 shrink-0 rounded-full', isActive ? 'bg-lime' : 'bg-edge-dark')}
+                        aria-hidden="true"
+                      />
+                      {item.label}
+                    </>
+                  )}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-          <div className="min-w-0 space-y-8">
-            <Outlet />
-            <div className="border-t border-edge-dark pt-6">
-              <DisclaimerBar />
-            </div>
-          </div>
+        {/* No DisclaimerBar here: AppShell renders one in the page footer
+            for every authenticated screen, and a second copy a few hundred
+            pixels above it just read as a duplicate. */}
+        <div className="min-w-0 space-y-8">
+          <Outlet />
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

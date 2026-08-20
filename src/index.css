@@ -1,8 +1,16 @@
 /* -----------------------------------------------------------------------------
-   Fonts — PRD Section 2.2: Inter Tight (display) + Inter (body/numerals),
-   self-hosted through Fontsource so there is no external font request.
-   Variable axes cover the 400-700 range the type scale needs.
+   Fonts — Outfit (display) + Plus Jakarta Sans (body) + JetBrains Mono (the
+   micro-labels and ledger figures), self-hosted through Fontsource so there is
+   no external font request. Variable axes cover the 400-700 range the type
+   scale needs.
+
+   Inter / Inter Tight stay imported as the fallback rung of the stacks in
+   tokens.css: they are metrically close enough that a failed load of the
+   display face does not reflow the page.
    -------------------------------------------------------------------------- */
+@import '@fontsource-variable/outfit/index.css';
+@import '@fontsource-variable/plus-jakarta-sans/index.css';
+@import '@fontsource-variable/jetbrains-mono/index.css';
 @import '@fontsource-variable/inter-tight/index.css';
 @import '@fontsource-variable/inter/index.css';
 

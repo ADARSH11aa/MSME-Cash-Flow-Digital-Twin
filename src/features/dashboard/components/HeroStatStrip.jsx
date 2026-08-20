@@ -1,4 +1,5 @@
 import StatCard from '@/components/shared/StatCard';
+import { Stagger, StaggerItem } from '@/components/shared/motion';
 import useCountUp from '@/hooks/useCountUp';
 import { formatDateLong, riskToneForDays } from '@/lib/format';
 
@@ -16,10 +17,12 @@ function DaysToBreach({ days }) {
   const animated = useCountUp(days, { duration: 600 });
   return (
     <span className="flex items-baseline gap-2">
-      <span data-numeric className="tabular">
+      <span data-numeric className="tabular text-display-lg leading-none">
         {Math.round(animated)}
       </span>
-      <span className="text-heading-md text-chalk-lo">days</span>
+      {/* The unit is a label, not part of the figure: body face, one weight
+          down, muted — so the numeral is unambiguously what you read first. */}
+      <span className="font-sans text-heading-md font-medium text-chalk-lo">days</span>
     </span>
   );
 }
@@ -29,49 +32,58 @@ export default function HeroStatStrip({ data }) {
   const concentrationHigh = data.topCustomerConcentrationPct > 40;
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
-      <StatCard
-        label="Days to liquidity breach"
-        tone={tone}
-        stateLabel={label}
-        size="lg"
-        displayValue={
-          data.daysToBreach == null ? (
-            <span className="text-display-md">No breach projected</span>
-          ) : (
-            <DaysToBreach days={data.daysToBreach} />
-          )
-        }
-        caption={
-          data.breachDate
-            ? `Expected cash may fall below buffer around ${formatDateLong(data.breachDate)}`
-            : 'Expected cash stays above your operating buffer across this horizon'
-        }
-      />
+    <Stagger className="grid gap-4 md:grid-cols-3">
+      <StaggerItem className="flex">
+        <StatCard
+          className="w-full"
+          label="Days to liquidity breach"
+          tone={tone}
+          stateLabel={label}
+          size="lg"
+          displayValue={
+            data.daysToBreach == null ? (
+              <span className="text-display-md">No breach projected</span>
+            ) : (
+              <DaysToBreach days={data.daysToBreach} />
+            )
+          }
+          caption={
+            data.breachDate
+              ? `Expected cash may fall below buffer around ${formatDateLong(data.breachDate)}`
+              : 'Expected cash stays above your operating buffer across this horizon'
+          }
+        />
+      </StaggerItem>
 
-      <StatCard
-        label="Projected cash — end of horizon"
-        value={data.projectedCashEndOfHorizon}
-        variant="currencyShort"
-        figureId="projected-cash"
-        delta={data.projectedCashEndOfHorizon - data.currentCash}
-        animate
-      />
+      <StaggerItem className="flex">
+        <StatCard
+          className="w-full"
+          label="Projected cash — end of horizon"
+          value={data.projectedCashEndOfHorizon}
+          variant="currencyShort"
+          figureId="projected-cash"
+          delta={data.projectedCashEndOfHorizon - data.currentCash}
+          animate
+        />
+      </StaggerItem>
 
-      <StatCard
-        label="Customer concentration"
-        value={data.topCustomerConcentrationPct}
-        variant="percent"
-        digits={1}
-        tone={concentrationHigh ? 'watch' : 'healthy'}
-        stateLabel={concentrationHigh ? 'Watch' : 'Balanced'}
-        animate
-        caption={
-          concentrationHigh
-            ? 'Over 40% of your receivables sit with a single customer'
-            : 'Your receivables are spread across several customers'
-        }
-      />
-    </div>
+      <StaggerItem className="flex">
+        <StatCard
+          className="w-full"
+          label="Customer concentration"
+          value={data.topCustomerConcentrationPct}
+          variant="percent"
+          digits={1}
+          tone={concentrationHigh ? 'watch' : 'healthy'}
+          stateLabel={concentrationHigh ? 'Watch' : 'Balanced'}
+          animate
+          caption={
+            concentrationHigh
+              ? 'Over 40% of your receivables sit with a single customer'
+              : 'Your receivables are spread across several customers'
+          }
+        />
+      </StaggerItem>
+    </Stagger>
   );
 }

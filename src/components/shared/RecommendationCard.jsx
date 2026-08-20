@@ -56,17 +56,19 @@ export default function RecommendationCard({ recommendation, onSimulate, classNa
   const card = (
     <div
       className={cn(
-        'flex h-full flex-col gap-6 border p-6 transition-all duration-200',
+        'flex h-full w-full flex-col gap-6 rounded-card border p-6 shadow-card',
+        'transition-[box-shadow,border-color,transform] duration-hover ease-out',
+        'hover:-translate-y-0.5 hover:shadow-card-hover',
         isRecommended
           ? 'border-lime/50 bg-surface-2'
-          : 'border-edge-dark bg-surface hover:border-chalk-lo/40 hover:shadow-card-dark',
+          : 'border-edge-dark bg-surface hover:border-chalk-lo/30',
       )}
     >
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <EyebrowLabel tone={isDebt ? 'watch' : 'healthy'}>{categoryLabel}</EyebrowLabel>
           {isRecommended ? (
-            <span className="bg-lime px-2 py-1 text-label-xs uppercase text-ink-hi">
+            <span className="rounded-control bg-lime px-2 py-1 text-label-xs uppercase text-ink-hi">
               Recommended
             </span>
           ) : null}

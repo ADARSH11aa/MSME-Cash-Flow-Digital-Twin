@@ -34,7 +34,7 @@ export default function AuditLogPage() {
       {loading || !events ? (
         <div className="space-y-2">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-16 animate-pulse border border-edge-dark bg-surface rounded-lg" />
+            <div key={i} className="h-16 animate-pulse border border-edge-dark bg-surface rounded-control" />
           ))}
         </div>
       ) : (
@@ -53,7 +53,7 @@ export default function AuditLogPage() {
                   aria-hidden="true"
                 />
 
-                <div className="border border-edge-dark bg-surface rounded-lg overflow-hidden shadow-sm">
+                <div className="border border-edge-dark bg-surface rounded-control overflow-hidden shadow-card">
                   <button
                     type="button"
                     onClick={() => toggle(event.id)}

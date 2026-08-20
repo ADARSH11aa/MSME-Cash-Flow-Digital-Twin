@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   AlertTriangle,
+  ChevronDown,
   Clock,
   FileText,
   Mail,
@@ -73,9 +74,9 @@ export default function NotificationsPage() {
 
       <form onSubmit={handleSave} className="space-y-8">
         {/* Delivery Channels */}
-        <div className="rounded-xl border border-edge-dark bg-surface p-6 shadow-sm">
+        <div className="rounded-card border border-edge-dark bg-surface p-6 shadow-card">
           <div className="flex items-center gap-3 border-b border-edge-dark pb-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-lime-16 text-lime">
+            <div className="flex h-9 w-9 items-center justify-center rounded-control bg-lime-16 text-lime">
               <Smartphone className="h-5 w-5" />
             </div>
             <div>
@@ -85,9 +86,9 @@ export default function NotificationsPage() {
           </div>
 
           <div className="mt-6 space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-xl border border-edge-dark bg-surface-2/60">
+            <div className="flex items-center justify-between p-4 rounded-card border border-edge-dark bg-surface-2/60">
               <div className="flex items-center gap-3.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface border border-edge-dark text-lime">
+                <div className="flex h-8 w-8 items-center justify-center rounded-control bg-surface border border-edge-dark text-lime">
                   <Mail className="h-4 w-4" />
                 </div>
                 <div>
@@ -98,9 +99,9 @@ export default function NotificationsPage() {
               <Switch checked={channels.email} onCheckedChange={() => handleChannelToggle('email')} />
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-xl border border-edge-dark bg-surface-2/60">
+            <div className="flex items-center justify-between p-4 rounded-card border border-edge-dark bg-surface-2/60">
               <div className="flex items-center gap-3.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface border border-edge-dark text-emerald-400">
+                <div className="flex h-8 w-8 items-center justify-center rounded-control bg-surface border border-edge-dark text-emerald-400">
                   <MessageSquare className="h-4 w-4" />
                 </div>
                 <div>
@@ -111,9 +112,9 @@ export default function NotificationsPage() {
               <Switch checked={channels.whatsapp} onCheckedChange={() => handleChannelToggle('whatsapp')} />
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-xl border border-edge-dark bg-surface-2/60">
+            <div className="flex items-center justify-between p-4 rounded-card border border-edge-dark bg-surface-2/60">
               <div className="flex items-center gap-3.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface border border-edge-dark text-chalk-lo">
+                <div className="flex h-8 w-8 items-center justify-center rounded-control bg-surface border border-edge-dark text-chalk-lo">
                   <Smartphone className="h-4 w-4" />
                 </div>
                 <div>
@@ -127,9 +128,9 @@ export default function NotificationsPage() {
         </div>
 
         {/* Trigger Rules */}
-        <div className="rounded-xl border border-edge-dark bg-surface p-6 shadow-sm">
+        <div className="rounded-card border border-edge-dark bg-surface p-6 shadow-card">
           <div className="flex items-center gap-3 border-b border-edge-dark pb-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-risk-16 text-risk">
+            <div className="flex h-9 w-9 items-center justify-center rounded-control bg-risk-16 text-risk">
               <ShieldAlert className="h-5 w-5" />
             </div>
             <div>
@@ -140,7 +141,7 @@ export default function NotificationsPage() {
 
           <div className="mt-6 space-y-4">
             {/* Rule 1: Liquidity Breach */}
-            <div className="p-5 rounded-xl border border-edge-dark bg-surface-2/60 space-y-3 shadow-sm">
+            <div className="p-5 rounded-card border border-edge-dark bg-surface-2/60 space-y-3 shadow-card">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3.5">
                   <TrendingDown className="h-4.5 w-4.5 text-risk shrink-0" />
@@ -160,21 +161,33 @@ export default function NotificationsPage() {
               {alerts.liquidityBreach ? (
                 <div className="mt-3 pl-8 pt-3 border-t border-edge-dark/60 flex items-center gap-3">
                   <span className="text-label-xs uppercase text-chalk-lo font-semibold tracking-wider">Alert horizon:</span>
-                  <select
-                    value={alerts.breachHorizon}
-                    onChange={(e) => setAlerts((prev) => ({ ...prev, breachHorizon: e.target.value }))}
-                    className="rounded-lg border border-edge-dark bg-surface px-3 py-1.5 text-xs text-chalk-hi focus:border-lime focus:outline-none"
-                  >
-                    <option value="15">15 days before breach</option>
-                    <option value="30">30 days before breach (Recommended)</option>
-                    <option value="60">60 days before breach</option>
-                  </select>
+                  {/* appearance-none + our own chevron: the native control was
+                      the only OS-chrome element left on a page of custom
+                      toggles, and it rendered at a different height than
+                      everything around it. */}
+                  <span className="relative inline-flex items-center">
+                    <select
+                      value={alerts.breachHorizon}
+                      onChange={(e) =>
+                        setAlerts((prev) => ({ ...prev, breachHorizon: e.target.value }))
+                      }
+                      className="appearance-none rounded-control border border-edge-dark bg-surface py-2 pl-3 pr-9 text-body-sm text-chalk-hi transition-colors duration-hover ease-out hover:border-chalk-lo/40 focus:border-lime focus:outline-none"
+                    >
+                      <option value="15">15 days before breach</option>
+                      <option value="30">30 days before breach (Recommended)</option>
+                      <option value="60">60 days before breach</option>
+                    </select>
+                    <ChevronDown
+                      className="pointer-events-none absolute right-3 h-3.5 w-3.5 text-chalk-lo"
+                      aria-hidden="true"
+                    />
+                  </span>
                 </div>
               ) : null}
             </div>
 
             {/* Rule 2: Overdue Invoices */}
-            <div className="flex items-center justify-between p-5 rounded-xl border border-edge-dark bg-surface-2/60 shadow-sm">
+            <div className="flex items-center justify-between p-5 rounded-card border border-edge-dark bg-surface-2/60 shadow-card">
               <div className="flex items-center gap-3.5">
                 <AlertTriangle className="h-4.5 w-4.5 text-caution shrink-0" />
                 <div>
@@ -191,7 +204,7 @@ export default function NotificationsPage() {
             </div>
 
             {/* Rule 3: Large Outflows */}
-            <div className="flex items-center justify-between p-5 rounded-xl border border-edge-dark bg-surface-2/60 shadow-sm">
+            <div className="flex items-center justify-between p-5 rounded-card border border-edge-dark bg-surface-2/60 shadow-card">
               <div className="flex items-center gap-3.5">
                 <Clock className="h-4.5 w-4.5 text-info shrink-0" />
                 <div>
@@ -208,7 +221,7 @@ export default function NotificationsPage() {
             </div>
 
             {/* Rule 4: Weekly Digest */}
-            <div className="flex items-center justify-between p-5 rounded-xl border border-edge-dark bg-surface-2/60 shadow-sm">
+            <div className="flex items-center justify-between p-5 rounded-card border border-edge-dark bg-surface-2/60 shadow-card">
               <div className="flex items-center gap-3.5">
                 <FileText className="h-4.5 w-4.5 text-lime shrink-0" />
                 <div>
@@ -228,7 +241,7 @@ export default function NotificationsPage() {
 
         {/* Save button */}
         <div className="flex justify-end gap-3 pt-2">
-          <Button type="submit" size="md" disabled={saving} className="rounded-lg px-6 font-semibold">
+          <Button type="submit" size="md" disabled={saving} className="rounded-control px-6 font-semibold">
             {saving ? (
               'Saving changes…'
             ) : (

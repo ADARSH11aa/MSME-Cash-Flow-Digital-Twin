@@ -1,11 +1,14 @@
-import { Save, SlidersHorizontal } from 'lucide-react';
+import { Bookmark, Save, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import cn from '@/lib/cn';
 import Button from '@/components/shared/Button';
-import EyebrowLabel from '@/components/shared/EyebrowLabel';
+import Card from '@/components/shared/Card';
 import Figure from '@/components/shared/Figure';
 import ForecastChart from '@/components/shared/ForecastChart';
+import PageContainer from '@/components/shared/PageContainer';
+import PageHeader from '@/components/shared/PageHeader';
 import SegmentedToggle from '@/components/shared/SegmentedToggle';
 import { useToast } from '@/components/shared/Toast';
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -56,6 +59,12 @@ export default function ScenarioSimulatorPage() {
     if (applied) Object.assign(base, applied.shocks);
     return base;
   }, [state, applied]);
+
+  const dirty =
+    Boolean(applied) ||
+    state.delayDays !== 0 ||
+    state.revenueShockPct !== 0 ||
+    state.expenseShockPct !== 0;
 
   useEffect(() => {
     if (!applyId) return;
@@ -122,21 +131,40 @@ export default function ScenarioSimulatorPage() {
   );
 
   return (
-    <div className="px-5 py-8 md:px-8">
-      <header className="mb-6">
-        <EyebrowLabel>Stress testing</EyebrowLabel>
-        <h1 className="mt-3 font-display text-display-md text-chalk-hi">Scenario simulator</h1>
-        <p className="mt-1 max-w-2xl text-body-sm text-chalk-lo">
-          Change an assumption and watch the projection recalculate. Nothing here changes your real
-          data.
-        </p>
-      </header>
+    <PageContainer>
+      <PageHeader
+        eyebrow={
+          <span className="flex items-center gap-2">
+            Stress testing
+            {/* The page recalculates silently, so this dot is the only signal
+                that what you are looking at is no longer the baseline. */}
+            {dirty ? (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-flex items-center gap-1.5 text-info"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-info" aria-hidden="true" />
+                Live
+              </motion.span>
+            ) : null}
+          </span>
+        }
+        title="Scenario simulator"
+        subtitle="Change an assumption and watch the projection recalculate. Nothing here changes your real data."
+        actions={
+          <Button variant="secondary" size="sm" onClick={save}>
+            <Save className="h-3.5 w-3.5" /> Save scenario
+          </Button>
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,320px)_1fr]">
         {/* Builder is a persistent left panel on desktop, a bottom sheet on
             mobile (PRD Section 7). */}
         <aside className="hidden lg:block">
-          <div className="sticky top-6 border border-edge-dark bg-surface p-5">{builder}</div>
+          <Card className="sticky top-6">{builder}</Card>
         </aside>
 
         <div className="lg:hidden">
@@ -154,16 +182,18 @@ export default function ScenarioSimulatorPage() {
         </div>
 
         <div className="min-w-0 space-y-6">
-          {result ? <ScenarioDeltaStrip result={result} /> : <div className="h-32" />}
+          {result ? <ScenarioDeltaStrip result={result} /> : <StripSkeleton />}
 
-          <section className="border border-edge-dark bg-surface p-5">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-display text-heading-md text-chalk-hi">
-                Recalculated forecast
+          <Card as="section">
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+              <div className="min-w-0">
+                <h2 className="font-display text-heading-md text-chalk-hi">Recalculated forecast</h2>
                 {applied ? (
-                  <span className="ml-2 text-body-sm text-lime">· {applied.strategy} applied</span>
+                  <span className="mt-1.5 inline-flex items-center rounded-full bg-lime-8 px-2 py-0.5 text-label-xs uppercase text-lime-ink">
+                    {applied.strategy} applied
+                  </span>
                 ) : null}
-              </h2>
+              </div>
               <SegmentedToggle
                 label="Emphasised band"
                 value={band}
@@ -187,33 +217,51 @@ export default function ScenarioSimulatorPage() {
                 ariaSummary={`Under this scenario, cash falls below the buffer after ${result.daysToBreachAfter ?? 'no'} days, compared with ${result.daysToBreachBefore ?? 'no'} days before.`}
               />
             ) : (
-              <div className="h-[340px] animate-pulse bg-surface-2" />
+              <div className="h-[340px] animate-pulse rounded-card bg-surface-2" />
             )}
 
-            <p className="mt-4 text-body-sm text-chalk-lo">
+            <p className="mt-4 flex items-center gap-2 text-body-sm text-chalk-lo">
+              <span
+                className="w-6 shrink-0 border-t-2 border-dashed border-chalk-lo/60"
+                aria-hidden="true"
+              />
               Dashed grey line shows your forecast before this scenario was applied.
             </p>
-          </section>
+          </Card>
 
           {result ? <BandTable bands={result.bands} activeBand={band} onSelect={setBand} /> : null}
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Button variant="secondary" onClick={save}>
-              <Save className="h-4 w-4" /> Save scenario
-            </Button>
-            {saved.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setState(s.state)}
-                className="rounded-full border border-edge-dark px-3 py-1.5 text-label-xs uppercase text-chalk-lo transition-colors hover:border-chalk-lo hover:text-chalk-hi"
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
+          {saved.length ? (
+            <Card as="section">
+              <span className="text-label-xs uppercase text-chalk-lo">Saved scenarios</span>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {saved.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setState(s.state)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-edge-dark px-3 py-1.5 text-label-xs uppercase text-chalk-lo transition-colors hover:border-info hover:bg-info-8 hover:text-info"
+                  >
+                    <Bookmark className="h-3 w-3" aria-hidden="true" />
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </Card>
+          ) : null}
         </div>
       </div>
+    </PageContainer>
+  );
+}
+
+/** Holds the delta strip's footprint so the page does not jump on first result. */
+function StripSkeleton() {
+  return (
+    <div className="grid gap-4 lg:grid-cols-3">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="h-[150px] animate-pulse rounded-card bg-surface-2" />
+      ))}
     </div>
   );
 }
@@ -221,16 +269,39 @@ export default function ScenarioSimulatorPage() {
 /** Optimistic / expected / pessimistic comparison (concept doc §6.5). */
 function BandTable({ bands, activeBand, onSelect }) {
   const meta = {
-    optimistic: { label: 'Optimistic', note: 'Everyone pays on contractual terms', tone: 'text-viz-optimistic' },
-    expected: { label: 'Expected', note: 'Customers pay with their usual delay', tone: 'text-viz-expected' },
-    pessimistic: { label: 'Pessimistic', note: 'Everyone pays at their worst observed delay', tone: 'text-viz-pessimistic' },
+    optimistic: {
+      label: 'Optimistic',
+      note: 'Everyone pays on contractual terms',
+      text: 'text-viz-optimistic',
+      dot: 'bg-viz-optimistic',
+      rail: 'border-viz-optimistic',
+    },
+    expected: {
+      label: 'Expected',
+      note: 'Customers pay with their usual delay',
+      text: 'text-viz-expected',
+      dot: 'bg-viz-expected',
+      rail: 'border-viz-expected',
+    },
+    pessimistic: {
+      label: 'Pessimistic',
+      note: 'Everyone pays at their worst observed delay',
+      text: 'text-viz-pessimistic',
+      dot: 'bg-viz-pessimistic',
+      rail: 'border-viz-pessimistic',
+    },
   };
 
   return (
     // Scrolls within itself on narrow screens rather than widening the page.
-    <section className="overflow-x-auto border border-edge-dark bg-surface">
+    <Card as="section" padding="none" className="overflow-x-auto">
       <table className="w-full min-w-[560px] text-left">
-        <caption className="sr-only">Outcome by forecast band</caption>
+        <caption className="px-5 pt-5 text-left font-display text-heading-md text-chalk-hi">
+          Outcome by forecast band
+          <span className="mt-1 block text-body-sm font-normal text-chalk-lo">
+            Select a row to emphasise that band in the chart above.
+          </span>
+        </caption>
         <thead>
           <tr className="border-b border-edge-dark">
             <th scope="col" className="px-5 py-3 text-label-xs uppercase text-chalk-lo">Band</th>
@@ -240,29 +311,46 @@ function BandTable({ bands, activeBand, onSelect }) {
           </tr>
         </thead>
         <tbody>
-          {bands.map((row) => (
-            <tr
-              key={row.band}
-              onClick={() => onSelect(row.band)}
-              className={cn(
-                'cursor-pointer border-b border-edge-dark transition-colors last:border-b-0 hover:bg-surface-2',
-                row.band === activeBand && 'bg-surface-2',
-              )}
-            >
-              <td className={cn('px-5 py-3 text-body-sm', meta[row.band].tone)}>
-                {meta[row.band].label}
-              </td>
-              <td className="px-5 py-3 text-body-sm text-chalk-lo">{meta[row.band].note}</td>
-              <td data-numeric className="px-5 py-3 text-right text-body-sm tabular text-chalk-hi">
-                {row.daysToBreach ?? 'No breach'}
-              </td>
-              <td className="px-5 py-3 text-right text-body-sm text-chalk-hi">
-                <Figure value={row.closing} variant="currencyShort" />
-              </td>
-            </tr>
-          ))}
+          {bands.map((row) => {
+            const active = row.band === activeBand;
+            return (
+              <tr
+                key={row.band}
+                onClick={() => onSelect(row.band)}
+                className={cn(
+                  'cursor-pointer border-b border-edge-dark transition-colors last:border-b-0 hover:bg-surface-2',
+                  active && 'bg-surface-2',
+                )}
+              >
+                {/* The 2px rail on the leading cell marks the selected band far
+                    more legibly than a background tint alone on cream. */}
+                <td
+                  className={cn(
+                    'border-l-2 px-5 py-3.5 text-body-sm font-medium',
+                    meta[row.band].text,
+                    active ? meta[row.band].rail : 'border-transparent',
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={cn('h-2 w-2 shrink-0 rounded-full', meta[row.band].dot)}
+                      aria-hidden="true"
+                    />
+                    {meta[row.band].label}
+                  </span>
+                </td>
+                <td className="px-5 py-3.5 text-body-sm text-chalk-lo">{meta[row.band].note}</td>
+                <td data-numeric className="px-5 py-3.5 text-right text-body-sm tabular text-chalk-hi">
+                  {row.daysToBreach ?? 'No breach'}
+                </td>
+                <td className="px-5 py-3.5 text-right text-body-sm text-chalk-hi">
+                  <Figure value={row.closing} variant="currencyShort" />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
-    </section>
+    </Card>
   );
 }

@@ -68,7 +68,7 @@ export default function DataTable({
     // never makes the whole page scroll sideways on mobile (PRD Section 7).
     <div
       className={cn(
-        'w-full overflow-x-auto border',
+        'w-full overflow-x-auto rounded-card border shadow-card',
         onLight ? 'border-edge-light bg-light-card' : 'border-edge-dark bg-surface',
         className,
       )}
@@ -130,6 +130,7 @@ export default function DataTable({
                 onLight
                   ? 'border-edge-light hover:bg-light'
                   : 'border-edge-dark hover:bg-surface-2',
+                'transition-colors duration-hover ease-out',
               )}
             >
               {columns.map((column) => (

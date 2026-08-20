@@ -48,8 +48,15 @@ export default function HowItWorks() {
     offset: ['start start', 'end end'],
   });
 
+  // Advancing the stage is navigation, not decoration — it is the only way to
+  // reach stages 2-4, and the section pins the viewport for ~2 screens while
+  // you do it. Gating it on prefers-reduced-motion left anyone with that
+  // setting scrolling through a locked "Stage 01/04" that never moved.
+  //
+  // Same rule as the landing <Reveal>: reduced motion softens *how* things
+  // change, it never removes the content or the means of getting to it. The
+  // AnimatePresence transitions below already collapse on their own.
   useMotionValueEvent(scrollYProgress, 'change', (latest) => {
-    if (prefersReduced) return;
     const stepCount = STEPS.length;
     // Map scroll progress (0 to 1) across the 4 steps
     const index = Math.min(stepCount - 1, Math.max(0, Math.floor(latest * stepCount)));
@@ -191,12 +198,16 @@ export default function HowItWorks() {
               {/* Right Dynamic Showcase Panel */}
               <div className="overflow-hidden rounded-2xl border border-edge-dark bg-surface-2 md:bg-gradient-to-r md:from-surface md:from-50% md:to-surface-2 md:to-50% shadow-[0_12px_36px_rgba(11,23,32,0.06)]">
                 <AnimatePresence mode="wait">
+                  {/* Under reduced motion the stage still changes, it just
+                      swaps instantly instead of sliding. */}
                   <motion.div
                     key={active}
-                    initial={{ opacity: 0, y: 15 }}
+                    initial={prefersReduced ? false : { opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    exit={prefersReduced ? { opacity: 1 } : { opacity: 0, y: -15 }}
+                    transition={
+                      prefersReduced ? { duration: 0 } : { duration: 0.35, ease: [0.16, 1, 0.3, 1] }
+                    }
                     className="grid md:grid-cols-2 min-h-[360px] items-stretch"
                   >
                     {/* Stage Details (Left Side) */}

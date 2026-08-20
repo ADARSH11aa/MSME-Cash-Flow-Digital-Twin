@@ -45,9 +45,9 @@ export default function StatCard({
 
   const toneText = {
     default: 'text-chalk-hi',
-    healthy: 'text-lime',
-    watch: 'text-caution',
-    risk: 'text-risk',
+    healthy: 'text-lime-ink',
+    watch: 'text-caution-ink',
+    risk: 'text-risk-ink',
   }[tone];
 
   const toneBorder = {
@@ -61,16 +61,17 @@ export default function StatCard({
     <div
       className={cn(
         // min-w-0 so a long caption cannot widen the grid track it sits in.
-        'group flex min-w-0 flex-col justify-between gap-4 border bg-surface p-5 transition-all duration-200',
-        'hover:border-chalk-lo/40 hover:shadow-card-dark',
+        'group flex min-w-0 flex-col justify-between gap-4 rounded-card border bg-surface p-5 shadow-card',
+        'transition-[box-shadow,border-color,transform] duration-hover ease-out',
+        'hover:-translate-y-0.5 hover:border-chalk-lo/30 hover:shadow-card-hover',
         toneBorder,
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <span className="text-label-xs uppercase text-chalk-lo">{label}</span>
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+        <span className="min-w-0 text-label-xs uppercase text-chalk-lo">{label}</span>
         {stateLabel ? (
-          <span className={cn('flex shrink-0 items-center gap-1.5 text-label-xs uppercase', toneText)}>
+          <span className={cn('flex shrink-0 items-center gap-1.5 whitespace-nowrap text-label-xs uppercase', toneText)}>
             <StateIcon className="h-3 w-3" aria-hidden="true" />
             {stateLabel}
           </span>
@@ -100,7 +101,7 @@ export default function StatCard({
           <div
             className={cn(
               'flex items-center gap-1.5 text-body-sm',
-              delta >= 0 ? 'text-lime' : 'text-risk',
+              delta >= 0 ? 'text-lime-ink' : 'text-risk-ink',
             )}
           >
             {delta >= 0 ? (

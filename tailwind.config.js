@@ -24,21 +24,30 @@ export default {
           DEFAULT: 'var(--bg-light)',
           card: 'var(--bg-light-card)',
         },
+        // The one high-contrast ground in a light-on-cream product: used for
+        // the single "read this" card on a screen, never for a whole surface.
+        navy: {
+          DEFAULT: 'var(--bg-navy)',
+          surface: 'var(--bg-navy-surface)',
+        },
 
         // Accent + risk semantics
         lime: {
           DEFAULT: 'var(--accent-lime)',
           dim: 'var(--accent-lime-dim)',
+          ink: 'var(--accent-lime-ink)',
           8: 'var(--accent-lime-8)',
           16: 'var(--accent-lime-16)',
         },
         risk: {
           DEFAULT: 'var(--risk-red)',
+          ink: 'var(--risk-red-ink)',
           8: 'var(--risk-red-8)',
           16: 'var(--risk-red-16)',
         },
         caution: {
           DEFAULT: 'var(--risk-amber)',
+          ink: 'var(--risk-amber-ink)',
           8: 'var(--risk-amber-8)',
           16: 'var(--risk-amber-16)',
         },
@@ -46,6 +55,11 @@ export default {
           DEFAULT: 'var(--info-blue)',
           8: 'var(--info-blue-8)',
           16: 'var(--info-blue-16)',
+        },
+        cyan: {
+          DEFAULT: 'var(--accent-cyan)',
+          8: 'var(--accent-cyan-8)',
+          16: 'var(--accent-cyan-16)',
         },
 
         // Text
@@ -76,6 +90,7 @@ export default {
       fontFamily: {
         display: 'var(--font-display)',
         sans: 'var(--font-body)',
+        mono: 'var(--font-mono)',
       },
 
       /* Type scale — PRD Section 2.2 table.
@@ -91,19 +106,29 @@ export default {
       },
 
       borderRadius: {
-        // The reference frames are near-square: buttons/cards sit at 2-4px,
-        // never pill-rounded except the segmented toggle.
-        card: '4px',
-        control: '3px',
+        // The reference frames were near-square, but the shell (sidebar nav,
+        // avatar, toggle) had already settled at 8px and the two languages read
+        // as two products. One scale now: controls 8px, cards a step softer.
+        card: '10px',
+        control: '8px',
       },
 
       boxShadow: {
+        card: 'var(--shadow-card-rest)',
+        'card-hover': 'var(--shadow-card-hover)',
+        // Retained: the previous names are still referenced across the app and
+        // both resolved to the same value anyway.
         'card-dark': 'var(--shadow-card-hover-dark)',
         'card-light': 'var(--shadow-card-hover-light)',
       },
 
       transitionTimingFunction: {
         out: 'var(--ease-out)',
+        spring: 'var(--ease-spring)',
+      },
+
+      transitionDuration: {
+        hover: 'var(--motion-hover-duration)',
       },
 
       keyframes: {
