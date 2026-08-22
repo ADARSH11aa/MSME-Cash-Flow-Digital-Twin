@@ -1,0 +1,131 @@
+/**
+ * The only file in this backend that knows about AI_models' HTTP surface.
+ * Everything else (routes, adapters) calls the plain functions exported
+ * here and never touches fetch()/URLs directly - if AI_models' endpoints
+ * ever move, this is the one file that changes.
+ *
+ * Model 1's predictions and Model 5's SHAP explanations, and now Model 2
+ * (Monte Carlo), Model 7 (recommendation ranker) and Model 8 (risk graph)
+ * as well, are all reachable over HTTP on AI_models/main.py (port 8000) -
+ * see that file's module docstring for the endpoint list. This gateway has
+ * no Python dependency at all.
+ */
+import {
+  MODEL1_URL, MODEL1_RELOAD_URL, SIMULATE_URL, RISK_GRAPH_URL,
+  RECOMMENDATIONS_URL, RAW_INVOICES_PATH,
+} from './config.js';
+import { readInvoicesCsv } from './lib/csv.js';
+
+function toUTCDay(dateLike) {
+  if (dateLike instanceof Date) {
+    return Date.UTC(dateLike.getFullYear(), dateLike.getMonth(), dateLike.getDate());
+  }
+  const [y, m, d] = String(dateLike).slice(0, 10).split('-').map(Number);
+  return Date.UTC(y, m - 1, d);
+}
+
+async function fetchJson(url, init) {
+  const response = await fetch(url, init);
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.detail ?? `Request to ${url} failed: ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
+ * Model 1's live per-invoice p10/p50/p90 payment-day predictions, joined
+ * with invoice_amount / days_since_issue - exactly what /simulate and
+ * /risk-graph both need.
+ *
+ * today: reference date for "days_since_issue". Defaults to now - pass an
+ * explicit Date to pin the demo to a fixed day instead of whatever day you
+ * happen to run this.
+ */
+export async function loadPredictions(today = new Date()) {
+  const predictions = await fetchJson(MODEL1_URL);
+  if (predictions.length === 0) {
+    throw new Error(`Model 1's API at ${MODEL1_URL} returned zero predictions - check the server is running and its startup logs for errors.`);
+  }
+
+  const raw = readInvoicesCsv(RAW_INVOICES_PATH);
+  const rawById = new Map(raw.map((row) => [row.invoice_id, row]));
+
+  const todayDay = toUTCDay(today);
+
+  return predictions.map((p) => {
+    const rawRow = rawById.get(p.invoice_id);
+    if (!rawRow) {
+      throw new Error(`Invoice ${p.invoice_id} from Model 1's API response had no match in ${RAW_INVOICES_PATH} - check invoice_id formats line up.`);
+    }
+    const daysSinceIssue = Math.round((todayDay - toUTCDay(rawRow.issue_date)) / 86400000);
+    if (daysSinceIssue < 0) {
+      throw new Error(`Invoice ${p.invoice_id} has an issue_date after 'today' - check the reference date being used.`);
+    }
+    return {
+      invoice_id: p.invoice_id,
+      invoice_amount: Number(rawRow.invoice_amount),
+      days_since_issue: daysSinceIssue,
+      p10_payment_days: p.p10_payment_days,
+      p50_payment_days: p.p50_payment_days,
+      p90_payment_days: p.p90_payment_days,
+    };
+  });
+}
+
+/** Model 2: Monte Carlo cash-flow simulation from a predictions array - the
+ * caller may pass a shocked copy of loadPredictions()'s output for what-if
+ * scenarios (see adapters/scenarioShocks.js). Returns { forecast, summary }. */
+export async function runForecast(predictions, openingCash, dailyExpense, horizonDays, nSims, minBuffer) {
+  return fetchJson(SIMULATE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      predictions,
+      opening_cash: openingCash,
+      daily_expense: dailyExpense,
+      horizon_days: horizonDays,
+      n_sims: nSims,
+      min_buffer: minBuffer,
+    }),
+  });
+}
+
+/** Model 8: causal risk graph. Model 3 (anomaly) is fail-soft inside
+ * build_risk_graph itself, so it's fine if that server isn't running. */
+export async function runRiskGraph(openingCash, dailyExpense, horizonDays, minBuffer, maxFocusInvoices) {
+  return fetchJson(RISK_GRAPH_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      opening_cash: openingCash,
+      daily_expense: dailyExpense,
+      horizon_days: horizonDays,
+      min_buffer: minBuffer,
+      max_focus_invoices: maxFocusInvoices,
+    }),
+  });
+}
+
+/** Model 7: non-debt-first recommendation ranker. */
+export async function runRecommendations(overdueInvoiceValue) {
+  return fetchJson(RECOMMENDATIONS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ overdue_invoice_value: overdueInvoiceValue }),
+  });
+}
+
+/** The raw invoices.csv itself - used by the customer-stats and
+ * scenario-shocks adapters, which need columns (customer_name,
+ * cust_number, status) that Model 1's predictions don't carry. */
+export function loadRaw() {
+  return readInvoicesCsv(RAW_INVOICES_PATH);
+}
+
+/** Tells Model 1's server to re-read invoices.csv and rebuild its
+ * customer-history features - required after a CSV upload, since that
+ * data is otherwise cached at server startup. */
+export async function reloadModel1() {
+  return fetchJson(MODEL1_RELOAD_URL, { method: 'POST' });
+}

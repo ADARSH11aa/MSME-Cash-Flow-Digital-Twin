@@ -1,7 +1,9 @@
 import { CalendarClock, Check, ChevronDown, RotateCcw, TrendingDown, TrendingUp, Zap } from 'lucide-react';
+import { useEffect } from 'react';
 import cn from '@/lib/cn';
 import EyebrowLabel from '@/components/shared/EyebrowLabel';
 import ScenarioSliderControl from '@/components/shared/ScenarioSliderControl';
+import useAsync from '@/hooks/useAsync';
 import { getCustomerOptions, getScenarioPresets } from '@/mocks/api/scenarios';
 
 /**
@@ -21,8 +23,18 @@ const PRESET_ICONS = {
 };
 
 export default function ScenarioBuilder({ state, onChange, onPreset, activePreset, onReset }) {
-  const presets = getScenarioPresets();
-  const customers = getCustomerOptions();
+  const { data: presets } = useAsync(getScenarioPresets, []);
+  const { data: customers } = useAsync(getCustomerOptions, []);
+
+  // INITIAL's customerId is a fixture-era default that doesn't match any
+  // real customer from the backend — once the real list loads, snap to an
+  // actual id so the delay slider isn't silently pointed at nothing.
+  useEffect(() => {
+    if (!customers?.length) return;
+    if (customers.some((c) => c.value === state.customerId)) return;
+    onChange({ ...state, customerId: customers[0].value });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customers]);
 
   const dirty =
     Boolean(activePreset) ||
@@ -50,7 +62,7 @@ export default function ScenarioBuilder({ state, onChange, onPreset, activePrese
       {/* Stacked full-width rows rather than wrapped pills: the preset names are
           whole sentences, and as chips they shredded into ragged two-line blobs. */}
       <div className="space-y-2">
-        {presets.map((preset) => {
+        {(presets ?? []).map((preset) => {
           const Icon = PRESET_ICONS[preset.id] ?? Zap;
           const active = preset.id === activePreset;
 
@@ -100,7 +112,7 @@ export default function ScenarioBuilder({ state, onChange, onPreset, activePrese
               onChange={(e) => onChange({ ...state, customerId: e.target.value })}
               className="w-full appearance-none rounded-card border border-edge-dark bg-surface px-3 py-2.5 pr-9 text-body-sm text-chalk-hi transition-colors hover:border-chalk-lo/40 focus:border-info focus:outline-none"
             >
-              {customers.map((c) => (
+              {(customers ?? []).map((c) => (
                 <option key={c.value} value={c.value}>
                   {c.label}
                 </option>

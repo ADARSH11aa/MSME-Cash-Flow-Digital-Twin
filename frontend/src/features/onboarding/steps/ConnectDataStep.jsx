@@ -1,11 +1,17 @@
-import { FileSpreadsheet, Keyboard, Loader2, Plug, UploadCloud } from 'lucide-react';
-import { useState } from 'react';
+import { FileSpreadsheet, Keyboard, Loader2, Plug, TriangleAlert, UploadCloud } from 'lucide-react';
+import { useRef, useState } from 'react';
 import cn from '@/lib/cn';
 import Pill from '@/components/shared/Pill';
+import { uploadInvoices } from '@/mocks/api/data';
 
 /**
- * Onboarding step 2 (PRD 3.2) — three import methods as selectable cards, with
- * the upload path showing the OCR progress state described in PRD 3.3.
+ * Onboarding step 2 (PRD 3.2) — three import methods as selectable cards.
+ *
+ * The upload path calls the real pipeline (POST /api/data/upload-invoices,
+ * same endpoint as Settings → Data Sources' InvoiceCsvUpload) — this
+ * replaces AI_models/invoices.csv and reloads Model 1, so "Build my
+ * cash-flow twin" on step 3 computes the Dashboard against whatever was
+ * actually picked here, not a fixed demo dataset.
  */
 
 const METHODS = [
@@ -30,14 +36,31 @@ const METHODS = [
   },
 ];
 
-export default function ConnectDataStep({ method, onMethodChange }) {
-  const [ocrState, setOcrState] = useState('idle');
+export default function ConnectDataStep({ method, onMethodChange, onUploadComplete }) {
+  const inputRef = useRef(null);
+  const [uploadState, setUploadState] = useState('idle'); // idle | reading | done | error
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
-  const startUpload = () => {
-    setOcrState('reading');
-    // Stands in for the OCR round trip; the real flow replaces this with the
-    // extraction job's progress.
-    setTimeout(() => setOcrState('done'), 2200);
+  const handleFileChosen = async (file) => {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      setUploadState('error');
+      setError('Only .csv files are supported right now — PDF/image OCR (Model 4) isn’t wired into this step yet.');
+      return;
+    }
+
+    setUploadState('reading');
+    setError(null);
+    try {
+      const res = await uploadInvoices(file);
+      setResult(res);
+      setUploadState('done');
+      onUploadComplete?.(res);
+    } catch (e) {
+      setUploadState('error');
+      setError(e.message);
+    }
   };
 
   return (
@@ -86,17 +109,29 @@ export default function ConnectDataStep({ method, onMethodChange }) {
         <div
           className={cn(
             'flex flex-col items-center justify-center gap-3 border border-dashed px-6 py-12 text-center',
-            ocrState === 'done' ? 'border-lime/50 bg-lime-8' : 'border-edge-dark bg-surface',
+            uploadState === 'done' && 'border-lime/50 bg-lime-8',
+            uploadState === 'error' && 'border-caution/50 bg-caution/10',
+            uploadState === 'idle' || uploadState === 'reading'
+              ? 'border-edge-dark bg-surface'
+              : null,
           )}
         >
-          {ocrState === 'idle' ? (
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".csv"
+            className="hidden"
+            onChange={(e) => handleFileChosen(e.target.files?.[0] ?? null)}
+          />
+
+          {uploadState === 'idle' ? (
             <>
               <FileSpreadsheet className="h-7 w-7 text-chalk-lo" aria-hidden="true" />
               <p className="text-body-md text-chalk-hi">Drag files here, or choose them</p>
               <p className="text-body-sm text-chalk-lo">CSV, PDF or images of invoices</p>
               <button
                 type="button"
-                onClick={startUpload}
+                onClick={() => inputRef.current?.click()}
                 className="mt-2 border border-edge-dark px-4 py-2 text-label-xs uppercase text-chalk-hi transition-colors hover:border-chalk-lo"
               >
                 Choose files
@@ -104,25 +139,52 @@ export default function ConnectDataStep({ method, onMethodChange }) {
             </>
           ) : null}
 
-          {ocrState === 'reading' ? (
+          {uploadState === 'reading' ? (
             <div aria-live="polite" className="flex flex-col items-center gap-3">
               <Loader2 className="h-6 w-6 animate-spin text-info" aria-hidden="true" />
-              <p className="text-body-md text-chalk-hi">Reading invoice…</p>
+              <p className="text-body-md text-chalk-hi">Reading invoices…</p>
               <div className="h-1 w-56 overflow-hidden bg-surface-2">
                 <div className="h-full w-1/3 animate-[reveal-up_1.2s_ease-in-out_infinite] bg-info" />
               </div>
               <p className="text-body-sm text-chalk-lo">
-                Extracting amounts, due dates and customer names
+                Validating columns and rebuilding customer history
               </p>
             </div>
           ) : null}
 
-          {ocrState === 'done' ? (
+          {uploadState === 'done' && result ? (
             <div aria-live="polite" className="space-y-2">
-              <p className="text-body-md text-chalk-hi">7 invoices read</p>
-              <p className="text-body-sm text-chalk-lo">
-                One field came back low-confidence — you can correct it after setup.
+              <p className="text-body-md text-chalk-hi">
+                {result.rowCount} invoices read, {result.customerCount} customers
               </p>
+              <p className="text-body-sm text-chalk-lo">
+                Your twin will be built from this dataset — you can replace it any time from
+                Settings → Data Sources.
+              </p>
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="mt-1 text-label-xs uppercase text-chalk-lo underline underline-offset-2 hover:text-chalk-hi"
+              >
+                Choose a different file
+              </button>
+            </div>
+          ) : null}
+
+          {uploadState === 'error' ? (
+            <div aria-live="polite" className="space-y-2">
+              <div className="flex items-center justify-center gap-2 text-caution">
+                <TriangleAlert className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <p className="text-body-md">Could not read this file</p>
+              </div>
+              <p className="max-w-md text-body-sm text-chalk-lo">{error}</p>
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="mt-1 border border-edge-dark px-4 py-2 text-label-xs uppercase text-chalk-hi transition-colors hover:border-chalk-lo"
+              >
+                Try another file
+              </button>
             </div>
           ) : null}
         </div>

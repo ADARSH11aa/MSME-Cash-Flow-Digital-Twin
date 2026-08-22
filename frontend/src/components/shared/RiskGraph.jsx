@@ -13,7 +13,7 @@ import cn from '@/lib/cn';
  * so adding a node to the mock data does not require hand-positioning it.
  *
  * @param {{
- *   nodes: Array<{ id: string, label: string, type: 'customer'|'event'|'outcome', severity: 'low'|'medium'|'high' }>,
+ *   nodes: Array<{ id: string, label: string, type: 'customer'|'event'|'outcome', severity: 'low'|'medium'|'high', confidence?: 'low'|'normal' }>,
  *   edges: Array<{ from: string, to: string, label?: string }>,
  *   onNodeClick?: (node: object) => void,
  *   className?: string,
@@ -112,11 +112,17 @@ function RiskNode({ node, onClick }) {
   ];
 
   const typeLabel = { customer: 'Customer', event: 'Event', outcome: 'Outcome' }[node.type];
+  const lowConfidence = node.confidence === 'low';
 
   return (
     <button
       type="button"
       onClick={() => onClick?.(node)}
+      title={
+        lowConfidence
+          ? 'This customer has too little payment history for Model 1 to predict from directly — this figure fell back to a sector/industry average instead.'
+          : undefined
+      }
       className={cn(
         'w-full border px-3 py-2.5 text-left transition-all duration-200',
         'hover:shadow-card-dark',
@@ -129,6 +135,12 @@ function RiskNode({ node, onClick }) {
         <span className={cn('text-label-xs uppercase', severityText)}>{severityLabel}</span>
       </span>
       <span className="mt-1 block text-body-sm leading-snug">{node.label}</span>
+      {lowConfidence ? (
+        <span className="mt-1 flex items-center gap-1 text-label-xs uppercase text-chalk-lo">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-chalk-lo" aria-hidden="true" />
+          Low-confidence estimate
+        </span>
+      ) : null}
     </button>
   );
 }

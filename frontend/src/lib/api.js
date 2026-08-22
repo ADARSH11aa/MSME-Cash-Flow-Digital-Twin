@@ -20,13 +20,21 @@ export function mockRequest(produce, options = {}) {
   });
 }
 
+/** The backend gateway in backend/app/main.py — see its module docstring for how to run it. */
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:9000';
+
 /**
- * Placeholder for the eventual HTTP client.
  * @param {string} path
  * @param {RequestInit} [init]
  */
 export async function request(path, init) {
-  const response = await fetch(path, init);
-  if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+  const response = await fetch(`${API_BASE_URL}${path}`, init);
+  if (!response.ok) {
+    // FastAPI's HTTPException body is {"detail": "..."} — surface that
+    // instead of just the status code, since e.g. an upload's "missing
+    // required columns" message is the whole point of the error.
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.detail ?? `Request failed: ${response.status}`);
+  }
   return response.json();
 }

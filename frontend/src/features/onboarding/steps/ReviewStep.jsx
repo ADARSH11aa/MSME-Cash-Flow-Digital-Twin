@@ -4,12 +4,15 @@ import cn from '@/lib/cn';
 import { CONSENT_SCOPES } from '@/mocks/api/consent';
 
 /** Onboarding step 3 (PRD 3.2) — confirm what was granted before computing. */
-export default function ReviewStep({ consent, method }) {
-  const methodLabel = {
-    upload: 'Uploaded files',
-    manual: 'Manual entry',
-    connect: 'Accounting software',
-  }[method];
+export default function ReviewStep({ consent, method, uploadResult }) {
+  const methodLabel =
+    method === 'upload' && uploadResult
+      ? `${uploadResult.rowCount} invoices uploaded (${uploadResult.customerCount} customers)`
+      : {
+          upload: 'Uploaded files',
+          manual: 'Manual entry',
+          connect: 'Accounting software',
+        }[method];
 
   return (
     <div className="space-y-6">

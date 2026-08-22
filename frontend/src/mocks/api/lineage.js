@@ -1,14 +1,11 @@
-import { mockRequest } from '@/lib/api';
+import { mockRequest, request } from '@/lib/api';
 import {
-  BUSINESS,
   INVOICES,
   RECURRING_EXPENSES,
   SUPPLIER_OBLIGATIONS,
   dateFromToday,
   getCustomer,
-  outstandingInvoices,
 } from '../fixtures/business';
-import { buildForecast } from '../fixtures/forecastEngine';
 
 /**
  * GET /api/lineage/:figureId — PRD Section 6 `LineageResponse`.
@@ -17,6 +14,13 @@ import { buildForecast } from '../fixtures/forecastEngine';
  * `figureId` strings used by <Figure /> call sites are the keys below, so a
  * missing lineage is a build-time-visible mistake rather than a silent
  * un-clickable number.
+ *
+ * Current cash, expected receivables, and outstanding receivables are real —
+ * pulled from the live backend (GET /api/dashboard, /api/dashboard/receivables),
+ * same figures the Dashboard itself shows. Supplier payments / salaries /
+ * recurring expenses stay illustrative fixture data: the real pipeline only
+ * ever produces one flat daily_expense number (see backend/src/config.js),
+ * no per-category breakdown exists anywhere to draw a real one from.
  *
  * @typedef {Object} LineageResponse
  * @property {number} total
@@ -33,17 +37,12 @@ import { buildForecast } from '../fixtures/forecastEngine';
  * @returns {Promise<LineageResponse>}
  */
 export function getLineage(figureId) {
-  return mockRequest(() => buildLineage(figureId), { latency: 180 });
-}
-
-function buildLineage(figureId) {
   switch (figureId) {
-    case 'projected-cash':
-      return projectedCashLineage();
     case 'current-cash':
       return currentCashLineage();
     case 'receivables':
       return receivablesLineage();
+    case 'projected-cash':
     default:
       // An unknown id still resolves to the full projection rather than an
       // error state — the drawer is an explanation surface, never a dead end.
@@ -51,17 +50,16 @@ function buildLineage(figureId) {
   }
 }
 
-/** The §12 worked example: how the 30-day projected balance is built. */
-function projectedCashLineage() {
-  const { projectedCashEndOfHorizon } = buildForecast({ horizon: 30 });
-  const unpaid = outstandingInvoices();
+const ILLUSTRATIVE_SOURCE =
+  'Illustrative — this pipeline tracks one aggregate expense figure, not per-category data';
 
-  const receivablesInWindow = unpaid.filter((i) => {
-    const customer = getCustomer(i.customerId);
-    return i.dueOffset + customer.typicalDelayDays <= 30;
-  });
+/** How the 30-day projected balance is built. */
+async function projectedCashLineage() {
+  const [dashboard, receivables] = await Promise.all([
+    request('/api/dashboard?horizon=30'),
+    request('/api/dashboard/receivables?horizon=30'),
+  ]);
 
-  const receivableTotal = receivablesInWindow.reduce((sum, i) => sum + i.amount, 0);
   const supplierTotal = SUPPLIER_OBLIGATIONS.filter((o) => o.dueOffset <= 30).reduce(
     (sum, o) => sum + o.amount,
     0,
@@ -72,99 +70,83 @@ function projectedCashLineage() {
     0,
   );
 
-  const corrected = unpaid.find((i) => i.correctedBy);
-
   return {
     label: 'Projected balance — 30 days',
-    total: projectedCashEndOfHorizon,
+    total: dashboard.projectedCashEndOfHorizon,
     explanation:
-      'Every figure below traces back to a source record. Correct any value and the forecast recalculates immediately.',
+      'Current cash and expected receivables trace to your real imported invoices and payment-behaviour model. Supplier payments, salaries, and recurring expenses below are illustrative only — flagged as such — since this pipeline does not yet track named expense categories.',
     lineItems: [
       {
         label: 'Current cash',
-        amount: BUSINESS.currentCash,
+        amount: dashboard.currentCash,
         sign: '+',
-        source: `Bank balance, ${dateFromToday(0)}`,
+        source: 'Model 2 opening-cash assumption',
         confidence: 'high',
       },
       {
         label: 'Expected receivables',
-        amount: receivableTotal,
+        amount: receivables.expectedInWindow.total,
         sign: '+',
-        source: receivablesInWindow.map((i) => i.id).join(', ') || 'None inside horizon',
+        source:
+          receivables.expectedInWindow.items.map((i) => i.id).join(', ') || 'None inside horizon',
         confidence: 'medium',
-        correctedBy: corrected ? corrected.correctedBy : undefined,
-        correctedAt: corrected ? `${dateFromToday(corrected.correctedOffset)}T10:22:00Z` : undefined,
       },
       {
         label: 'Supplier payments',
         amount: supplierTotal,
         sign: '-',
-        source: SUPPLIER_OBLIGATIONS.filter((o) => o.dueOffset <= 30)
-          .map((o) => o.id.toUpperCase())
-          .join(', '),
-        confidence: 'high',
+        source: ILLUSTRATIVE_SOURCE,
+        confidence: 'low',
       },
       {
         label: 'Salaries',
         amount: salaries,
         sign: '-',
-        source: 'Payroll schedule — recurring, 1st of month',
-        confidence: 'high',
+        source: ILLUSTRATIVE_SOURCE,
+        confidence: 'low',
       },
       {
         label: 'Recurring expenses',
         amount: otherRecurring,
         sign: '-',
-        source: 'Rent, utilities, GST remittance',
-        confidence: 'high',
+        source: ILLUSTRATIVE_SOURCE,
+        confidence: 'low',
       },
     ],
   };
 }
 
-function currentCashLineage() {
+async function currentCashLineage() {
+  const dashboard = await request('/api/dashboard?horizon=30');
   return {
     label: 'Current cash',
-    total: BUSINESS.currentCash,
-    explanation: 'Your cash position today, as imported from your bank statement.',
+    total: dashboard.currentCash,
+    explanation: 'The opening-cash figure Model 2\'s simulation starts every forecast from.',
     lineItems: [
       {
-        label: 'Operating account',
-        amount: 286000,
+        label: 'Opening cash',
+        amount: dashboard.currentCash,
         sign: '+',
-        source: 'Bank statement upload',
+        source: 'Model 2 opening-cash assumption (backend/src/config.js)',
         confidence: 'high',
-      },
-      {
-        label: 'Cash on hand',
-        amount: 54000,
-        sign: '+',
-        source: 'Manual entry by owner',
-        confidence: 'medium',
-        correctedBy: 'Owner',
-        correctedAt: `${dateFromToday(-3)}T09:10:00Z`,
       },
     ],
   };
 }
 
-function receivablesLineage() {
-  const unpaid = outstandingInvoices();
+async function receivablesLineage() {
+  const receivables = await request('/api/dashboard/receivables?horizon=30');
+  const unpaid = receivables.outstanding.items;
   return {
     label: 'Outstanding receivables',
-    total: unpaid.reduce((sum, i) => sum + i.amount, 0),
+    total: receivables.outstanding.total,
     explanation: 'Every unpaid invoice currently in your book.',
     lineItems: unpaid.map((invoice) => ({
-      label: `${invoice.id} — ${getCustomer(invoice.customerId).name}`,
+      label: `${invoice.id} — ${invoice.customer}`,
       amount: invoice.amount,
       sign: '+',
-      source: `Due ${dateFromToday(invoice.dueOffset)}`,
-      confidence: invoice.confidence,
-      correctedBy: invoice.correctedBy,
-      correctedAt: invoice.correctedOffset
-        ? `${dateFromToday(invoice.correctedOffset)}T10:22:00Z`
-        : undefined,
+      source: `Due ${invoice.dueDate}`,
+      confidence: 'high',
     })),
   };
 }

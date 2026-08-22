@@ -1,4 +1,4 @@
-import { ArrowRight, Lightbulb, SlidersHorizontal } from 'lucide-react';
+import { ArrowRight, Info, Lightbulb, SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import BracketFrame from '@/components/shared/BracketFrame';
@@ -79,6 +79,24 @@ export default function DashboardPage() {
       />
 
       <HeroStatStrip data={data} />
+
+      {data.forwardInvoiceCount === 0 ? (
+        <StaggerItem as="section" index={2}>
+          <div
+            role="note"
+            className="flex items-start gap-3 border border-info/30 bg-info-8 px-4 py-3"
+          >
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-info" aria-hidden="true" />
+            <p className="text-body-sm text-chalk-hi">
+              Every currently open invoice is already past its own predicted payment window, so
+              there is nothing left to simulate day-by-day — this forecast reflects known cash
+              burn only, with no upside or downside modeled. That usually means the invoice data
+              is older than it looks relative to today, or this business has a real backlog of
+              severely overdue receivables.
+            </p>
+          </div>
+        </StaggerItem>
+      ) : null}
 
       <StaggerItem as="section" index={3}>
         <Card>

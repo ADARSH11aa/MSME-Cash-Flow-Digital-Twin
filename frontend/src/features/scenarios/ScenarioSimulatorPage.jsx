@@ -68,15 +68,19 @@ export default function ScenarioSimulatorPage() {
 
   useEffect(() => {
     if (!applyId) return;
-    const rec = getRecommendation(applyId);
-    if (rec) {
+    let cancelled = false;
+    getRecommendation(applyId).then((rec) => {
+      if (cancelled || !rec) return;
       setApplied(rec);
       toast({
         title: `Applied: ${rec.strategy}`,
         description: 'Shown as an overlay against your current forecast.',
         tone: 'info',
       });
-    }
+    });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applyId]);
 

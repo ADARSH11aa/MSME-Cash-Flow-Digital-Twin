@@ -104,9 +104,11 @@ export default function ExplainabilityPage() {
                 Where the numbers come from
               </h2>
               <p className="mt-2 max-w-2xl text-body-sm text-chalk-lo">
-                Inflows come from your invoices, timed by how late each customer has actually paid
-                in the past — not by the terms on the invoice. Outflows come from your recurring
-                schedule and supplier POs. Nothing is estimated where a record exists.
+                Inflows come from your imported invoices, timed by how late each customer has
+                actually paid in the past — not by the terms on the invoice. Outflows are currently
+                one aggregate daily-expense figure rather than named categories, so the supplier
+                payments, salaries, and recurring expenses breakdown below is illustrative — marked
+                as such wherever it appears — until this pipeline tracks expense categories directly.
               </p>
             </Card>
           </StaggerItem>

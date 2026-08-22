@@ -11,6 +11,7 @@ import {
 import Button from '@/components/shared/Button';
 import { useToast } from '@/components/shared/Toast';
 import { recordAuditEvent } from '@/mocks/api/auditLog';
+import InvoiceCsvUpload from './components/InvoiceCsvUpload';
 
 const DATA_SOURCES = [
   {
@@ -101,6 +102,8 @@ export default function DataSourcesPage() {
           <Plus className="h-4 w-4 mr-1.5" /> Connect new source
         </Button>
       </div>
+
+      <InvoiceCsvUpload />
 
       {/* Summary stats */}
       <div className="grid gap-5 sm:grid-cols-3">

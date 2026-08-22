@@ -24,6 +24,7 @@ export default function OnboardingFlow() {
   const [step, setStep] = useState(0);
   const [method, setMethod] = useState('upload');
   const [building, setBuilding] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
 
   const build = () => {
     setBuilding(true);
@@ -79,8 +80,16 @@ export default function OnboardingFlow() {
 
           <div className="border border-edge-dark bg-surface p-6 md:p-8">
             {step === 0 ? <ConsentStep consent={consent} onToggle={setScope} /> : null}
-            {step === 1 ? <ConnectDataStep method={method} onMethodChange={setMethod} /> : null}
-            {step === 2 ? <ReviewStep consent={consent} method={method} /> : null}
+            {step === 1 ? (
+              <ConnectDataStep
+                method={method}
+                onMethodChange={setMethod}
+                onUploadComplete={setUploadResult}
+              />
+            ) : null}
+            {step === 2 ? (
+              <ReviewStep consent={consent} method={method} uploadResult={uploadResult} />
+            ) : null}
 
             <div className="mt-8 flex items-center justify-between gap-3 border-t border-edge-dark pt-6">
               <Button
