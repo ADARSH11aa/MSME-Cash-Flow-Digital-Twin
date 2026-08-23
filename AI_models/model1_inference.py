@@ -21,6 +21,30 @@ import pandas as pd
 
 MIN_HISTORY_FOR_CONFIDENCE = 3
 
+# Shrinkage strength for customers with SOME but not enough history. A
+# customer with a single closed invoice used to have that one observation
+# treated as fully representative of their behaviour; now it is blended
+# toward the sector prior with weight count / (count + k). With k = 3 that
+# is 25% own-history at 1 invoice and 40% at 2, rising to full weight once
+# the customer clears MIN_HISTORY_FOR_CONFIDENCE.
+#
+# Applied ONLY to sub-threshold customers, deliberately: the model was
+# trained on un-shrunk features, so shrinking established customers too
+# would introduce train/serve skew for the cases the model already handles
+# well. This narrows the gap only where the input was demonstrably noisy.
+COLD_START_SHRINKAGE_K = 3.0
+
+# Cold-start P10/P90 come from the spread of the trained forest's trees,
+# which measures uncertainty for a customer the model has actually seen.
+# When the features are really sector averages standing in for an unknown
+# customer, the true uncertainty is wider than that spread implies, so the
+# interval (not just the "low" confidence label) has to say so.
+#
+# 1.6 is a judgement call, not a calibrated figure - there is no held-out
+# set of cold-start invoices in this dataset to fit it against. Revisit it
+# once real cold-start outcomes exist to measure coverage on.
+COLD_START_INTERVAL_WIDENING = 1.6
+
 FEATURE_COLUMNS = [
     "customer_avg_payment_days",
     "customer_recent_avg_payment_days",
@@ -64,6 +88,14 @@ class Model1Artifacts:
 
         # Filled by refresh_customer_stats()
         self.customer_stats = None
+
+        # Per-sector spread of days-to-payment, used as the stand-in for
+        # customer_payment_std when a customer has too little history to
+        # have a meaningful one of their own. Unlike the mean priors above
+        # these are not saved artifacts - they are recomputed from live
+        # closed history on every refresh, so they track the current data.
+        self.sector_std_priors = {}
+        self.global_std_prior = 0.0
 
     def refresh_customer_stats(self, closed_history_df: pd.DataFrame):
         """
@@ -123,6 +155,21 @@ class Model1Artifacts:
         )
 
         self.customer_stats = stats
+
+        # Sector spread priors. A sector needs at least two closed invoices
+        # for std() to return anything but NaN, hence the dropna.
+        if "sector" in closed_history_df.columns:
+            self.sector_std_priors = (
+                closed_history_df.groupby("sector")["days_to_payment"]
+                .std()
+                .dropna()
+                .to_dict()
+            )
+
+        global_std = closed_history_df["days_to_payment"].std()
+        self.global_std_prior = (
+            float(global_std) if pd.notna(global_std) else 0.0
+        )
 
 
 def build_model_matrix(
@@ -208,19 +255,44 @@ def build_model_matrix(
         .fillna(artifacts.global_prior)
     )
 
-    # These features use sector/global priors when customer
-    # history is unavailable.
-    for col in [
+    history_columns = [
         "customer_avg_payment_days",
         "customer_recent_avg_payment_days",
         "previous_payment_days",
-    ]:
+    ]
+
+    # No history at all - the prior is all there is to go on.
+    for col in history_columns:
         frame[col] = frame[col].fillna(sector_fill)
 
-    # Standard deviation has no meaningful value for a customer
-    # with insufficient history, so use zero.
+    # Some history, but not enough to trust on its own: blend toward the
+    # sector prior rather than treating one or two observations as the
+    # customer's settled behaviour. See COLD_START_SHRINKAGE_K.
+    observed_count = frame["customer_invoice_count"].fillna(0)
+    thin_history = (observed_count > 0) & (
+        observed_count < MIN_HISTORY_FOR_CONFIDENCE
+    )
+
+    if thin_history.any():
+        own_weight = observed_count / (observed_count + COLD_START_SHRINKAGE_K)
+        for col in history_columns:
+            blended = (
+                own_weight * frame[col] + (1 - own_weight) * sector_fill
+            )
+            frame.loc[thin_history, col] = blended[thin_history]
+
+    # Standard deviation used to be filled with zero, which reads to the
+    # model as "this customer pays like clockwork" - the most confident
+    # signal available, handed to the customer we know least about. The
+    # sector's own spread is the honest stand-in. Note this also catches
+    # customers with exactly one closed invoice, whose std() is NaN.
+    sector_std_fill = (
+        frame["sector"]
+        .map(artifacts.sector_std_priors)
+        .fillna(artifacts.global_std_prior)
+    )
     frame["customer_payment_std"] = (
-        frame["customer_payment_std"].fillna(0)
+        frame["customer_payment_std"].fillna(sector_std_fill)
     )
 
     # No recent-vs-average movement means no observed trend.
@@ -304,18 +376,41 @@ def predict_payment_window(
         ]
     ].copy()
 
+    p10 = preds["p10"].values
+    p50 = preds["p50"].values
+    p90 = preds["p90"].values
+
+    # Widen the interval where the features were priors rather than this
+    # customer's own history, so the band reflects that uncertainty instead
+    # of only the "low" confidence label doing so. P50 is left alone - the
+    # central estimate is the model's best guess either way; it is the
+    # confidence around it that was overstated.
+    is_cold_start = frame["is_cold_start"].to_numpy()
+    p10 = np.where(
+        is_cold_start,
+        p50 - (p50 - p10) * COLD_START_INTERVAL_WIDENING,
+        p10,
+    )
+    p90 = np.where(
+        is_cold_start,
+        p50 + (p90 - p50) * COLD_START_INTERVAL_WIDENING,
+        p90,
+    )
+    # An invoice cannot be paid before it is issued.
+    p10 = np.clip(p10, 0, None)
+
     out["predicted_days_p10"] = (
-        np.round(preds["p10"].values)
+        np.round(p10)
         .astype(int)
     )
 
     out["predicted_days_p50"] = (
-        np.round(preds["p50"].values)
+        np.round(p50)
         .astype(int)
     )
 
     out["predicted_days_p90"] = (
-        np.round(preds["p90"].values)
+        np.round(p90)
         .astype(int)
     )
 

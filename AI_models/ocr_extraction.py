@@ -13,8 +13,10 @@
 #      If confidence is too low, we mark it as needs_verification = True, so a human
 #      can double check it before we trust it.
 
+import os
 import re
 import io
+import shutil
 import pytesseract
 from PIL import Image
 from dateutil import parser as dateparser
@@ -24,7 +26,57 @@ from dateutil import parser as dateparser
 # and mark it for a human to check.
 CONFIDENCE_THRESHOLD = 80.0
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
+# Where to look for the Tesseract binary.
+#
+# This used to be a single hardcoded "C:\Program Files\Tesseract-OCR\..."
+# path. On any machine where Tesseract was installed elsewhere - or not at
+# all - every OCR call died with pytesseract's raw "is not installed or it's
+# not in your PATH" error, surfaced to the API caller as an opaque 400. That
+# is the whole "upload an invoice and correct it live" demo path, so it is
+# worth failing informatively.
+#
+# Note that only SCANNED pdfs and photos need this. A digitally-generated
+# PDF is read through its text layer by PyMuPDF (see read_invoice_file), so
+# that path works with no Tesseract installed at all.
+TESSERACT_SEARCH_PATHS = [
+    os.environ.get("TESSERACT_CMD"),
+    shutil.which("tesseract"),
+    r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+    r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+    os.path.expandvars(r"%LOCALAPPDATA%\Programs\Tesseract-OCR\tesseract.exe"),
+    os.path.expandvars(r"%LOCALAPPDATA%\Tesseract-OCR\tesseract.exe"),
+    "/usr/bin/tesseract",
+    "/usr/local/bin/tesseract",
+    "/opt/homebrew/bin/tesseract",
+]
+
+
+def find_tesseract():
+    """First existing path from TESSERACT_SEARCH_PATHS, or None."""
+    for candidate in TESSERACT_SEARCH_PATHS:
+        if candidate and os.path.isfile(candidate):
+            return candidate
+    return None
+
+
+TESSERACT_CMD = find_tesseract()
+if TESSERACT_CMD:
+    pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
+
+
+class TesseractNotInstalled(RuntimeError):
+    """Raised instead of pytesseract's own error, with a fix attached."""
+
+    def __init__(self):
+        super().__init__(
+            "This file needs OCR (it is a photo or a scanned PDF), but the "
+            "Tesseract engine is not installed on this machine. Install it "
+            "with `winget install --id UB-Mannheim.TesseractOCR`, or set the "
+            "TESSERACT_CMD environment variable to an existing tesseract "
+            "executable. Digitally-generated PDFs do not need Tesseract and "
+            "can be uploaded right now."
+        )
 # ============================================================
 # STEP 1: Get lines of text out of the file (either directly, or using OCR)
 # ============================================================
@@ -41,6 +93,12 @@ def get_lines_using_ocr(image):
     Returns a list of lines. Each line is a dictionary like:
         {"text": "Invoice No: INV-700123", "confidence": 93.3}
     """
+
+    # Checked here rather than at import time: a missing Tesseract must not
+    # stop the module loading, because the text-layer PDF path below needs
+    # none of this and should keep working.
+    if not find_tesseract():
+        raise TesseractNotInstalled()
 
     # image_to_data gives us a dictionary with lots of lists inside it - one entry
     # per word that Tesseract found. Example: data["text"][5] is the 5th word found.

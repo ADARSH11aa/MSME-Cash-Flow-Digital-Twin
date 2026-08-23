@@ -20,6 +20,8 @@ import multer from 'multer';
 import * as bridge from '../aiModelsBridge.js';
 import { parseInvoicesCsv, writeInvoicesCsv } from '../lib/csv.js';
 import { RAW_INVOICES_PATH, MODEL1_RAW_INVOICES_PATH, REQUIRED_INVOICE_COLUMNS } from '../config.js';
+import { invalidateCache as invalidateDashboardCache } from './dashboard.js';
+import { invalidateNarrationCache } from './narration.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -71,6 +73,10 @@ router.post('/upload-invoices', upload.single('file'), (req, res) => {
 
   bridge.reloadModel1()
     .then((reloadResult) => {
+      invalidateDashboardCache();
+      // Narrations are keyed on invoice_id, and a new CSV can reuse an id
+      // for a different invoice - stale text here would describe the old one.
+      invalidateNarrationCache();
       const statusBreakdown = {};
       const customerIds = new Set();
       for (const r of rows) {

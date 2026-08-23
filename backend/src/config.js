@@ -45,6 +45,14 @@ export const RISK_GRAPH_URL = process.env.RISK_GRAPH_URL ?? `${MODEL1_BASE_URL}/
 export const RECOMMENDATIONS_URL =
   process.env.RECOMMENDATIONS_URL ?? `${MODEL1_BASE_URL}/recommendations`;
 
+// Model 6 (LLM narration) - also on Model 1's server. Unlike the others this
+// one reaches an external API (Groq) on every call, which is why the route
+// in front of it is per-invoice and on demand rather than part of the
+// dashboard payload.
+export const NARRATE_URL = process.env.NARRATE_URL ?? `${MODEL1_BASE_URL}/narrate/invoice`;
+export const NARRATE_LANGUAGES_URL =
+  process.env.NARRATE_LANGUAGES_URL ?? `${MODEL1_BASE_URL}/narrate/languages`;
+
 // Required for the pipeline to run at all - see routes/data.js's upload
 // validation. Everything else in invoices.csv (actual_paid_date,
 // days_to_payment, delay_vs_due_date, had_partial_payment_flag,
@@ -57,14 +65,32 @@ export const REQUIRED_INVOICE_COLUMNS = [
 
 // Demo business parameters - see module docstring. Override with real
 // figures once a real business's opening cash / daily burn is known.
+//
+// DAILY_EXPENSE was 150_000, which burned faster than this dataset's
+// receivables could ever cover: cash fell to roughly -1_500_000 by day 30
+// and breach probability pinned at 100% for the whole horizon. A cash
+// balance that goes deeply negative isn't a forecast any real business can
+// have (it defaults first), and a flat 100% reads as a broken gauge rather
+// than a finding.
+//
+// 95_000 was picked by sweeping this value against the simulation on the
+// rebased dataset (see AI_models/data/rebase_demo_dates.py). It breaches the
+// minimum buffer around day 25 of the 30-day horizon - late enough that the
+// forecast shows a real decline, early enough that the breach is on screen -
+// while cash bottoms out near 640_000 (positive throughout) and peak breach
+// probability lands near 0.83 rather than a saturated 1.00.
+//
+// Re-sweep this if the dataset or Model 1's intervals change: the widened
+// cold-start bands alone moved the breach day by four and turned an earlier
+// 80_000 pick into no breach at all.
 export const DEFAULT_OPENING_CASH = Number(process.env.DEMO_OPENING_CASH ?? 2_000_000);
-export const DEFAULT_DAILY_EXPENSE = Number(process.env.DEMO_DAILY_EXPENSE ?? 150_000);
+export const DEFAULT_DAILY_EXPENSE = Number(process.env.DEMO_DAILY_EXPENSE ?? 95_000);
 export const DEFAULT_MIN_BUFFER = Number(process.env.DEMO_MIN_BUFFER ?? 1_000_000);
 export const DEFAULT_N_SIMS = Number(process.env.DEMO_N_SIMS ?? 3000);
 
 // Risk graph stays demo-legible instead of rendering the entire overdue
 // backlog as one hairball - see AI_models/risk_graph/build_risk_graph.py.
-export const RISK_GRAPH_MAX_FOCUS_INVOICES = Number(process.env.RISK_GRAPH_MAX_FOCUS_INVOICES ?? 12);
+export const RISK_GRAPH_MAX_FOCUS_INVOICES = Number(process.env.RISK_GRAPH_MAX_FOCUS_INVOICES ?? 6);
 
 export const CORS_ORIGINS = (
   process.env.CORS_ORIGINS ?? 'http://localhost:5173,http://127.0.0.1:5173'

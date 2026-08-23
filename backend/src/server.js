@@ -16,6 +16,7 @@ import express from 'express';
 import { CORS_ORIGINS } from './config.js';
 import dashboardRouter from './routes/dashboard.js';
 import dataRouter from './routes/data.js';
+import narrationRouter from './routes/narration.js';
 import recommendationsRouter from './routes/recommendations.js';
 import scenariosRouter from './routes/scenarios.js';
 
@@ -27,6 +28,7 @@ app.use(express.json());
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/scenarios', scenariosRouter);
 app.use('/api/recommendations', recommendationsRouter);
+app.use('/api/narration', narrationRouter);
 app.use('/api/data', dataRouter);
 
 app.get('/health', (req, res) => {

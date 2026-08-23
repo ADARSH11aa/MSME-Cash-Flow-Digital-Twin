@@ -2,10 +2,12 @@ import { useState } from 'react';
 import cn from '@/lib/cn';
 import CalculationLineage from '@/components/shared/CalculationLineage';
 import Card from '@/components/shared/Card';
+import InvoiceNarration from '@/components/shared/InvoiceNarration';
 import PageContainer from '@/components/shared/PageContainer';
 import PageHeader from '@/components/shared/PageHeader';
 import { StaggerItem } from '@/components/shared/motion';
 import useAsync from '@/hooks/useAsync';
+import { getDashboard } from '@/mocks/api/dashboard';
 import { getLineage } from '@/mocks/api/lineage';
 
 /**
@@ -24,6 +26,7 @@ const FIGURES = [
 
 const OUTLINE = [
   { id: 'ladder', label: 'Calculation ladder' },
+  { id: 'narration', label: 'Why a prediction' },
   { id: 'sources', label: 'Where the numbers come from' },
   { id: 'corrections', label: 'Corrections & audit' },
 ];
@@ -31,6 +34,18 @@ const OUTLINE = [
 export default function ExplainabilityPage() {
   const [figureId, setFigureId] = useState('projected-cash');
   const { data: lineage } = useAsync(() => getLineage(figureId), [figureId]);
+
+  // The risk graph's invoice nodes are the ones worth explaining — they are
+  // the invoices already driving the projected shortfall, so "why is this one
+  // predicted late" is a question the viewer is already asking by the time
+  // they reach this page.
+  const { data: dashboard } = useAsync(() => getDashboard(), []);
+  const invoiceIds = (dashboard?.riskGraph?.nodes ?? [])
+    .filter((n) => n.id.startsWith('invoice:'))
+    .map((n) => n.label);
+
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const activeInvoice = selectedInvoice ?? invoiceIds[0] ?? null;
 
   return (
     <PageContainer>
@@ -98,7 +113,43 @@ export default function ExplainabilityPage() {
             </div>
           </StaggerItem>
 
-          <StaggerItem as="section" index={1} id="sources" className="scroll-mt-24">
+          {activeInvoice ? (
+            <StaggerItem as="section" index={1} id="narration" className="scroll-mt-24">
+              <h2 className="font-display text-heading-md text-chalk-hi">
+                Why a prediction came out the way it did
+              </h2>
+              <p className="mt-2 max-w-2xl text-body-sm text-chalk-lo">
+                The ladder above traces a figure to its records. This traces a{' '}
+                <em>prediction</em> to its reasons — which of this customer&rsquo;s past
+                behaviours pushed the expected payment date later or earlier.
+              </p>
+
+              {invoiceIds.length > 1 ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {invoiceIds.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setSelectedInvoice(id)}
+                      aria-pressed={id === activeInvoice}
+                      className={cn(
+                        'rounded-control border px-3 py-1.5 text-body-sm transition-colors duration-hover',
+                        id === activeInvoice
+                          ? 'border-lime bg-lime-8 text-chalk-hi'
+                          : 'border-edge-dark text-chalk-lo hover:text-chalk-hi',
+                      )}
+                    >
+                      {id}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              <InvoiceNarration invoiceId={activeInvoice} className="mt-4" />
+            </StaggerItem>
+          ) : null}
+
+          <StaggerItem as="section" index={2} id="sources" className="scroll-mt-24">
             <Card padding="lg">
               <h2 className="font-display text-heading-md text-chalk-hi">
                 Where the numbers come from
@@ -113,7 +164,7 @@ export default function ExplainabilityPage() {
             </Card>
           </StaggerItem>
 
-          <StaggerItem as="section" index={2} id="corrections" className="scroll-mt-24">
+          <StaggerItem as="section" index={3} id="corrections" className="scroll-mt-24">
             <Card padding="lg">
               <h2 className="font-display text-heading-md text-chalk-hi">Corrections &amp; audit</h2>
               <p className="mt-2 max-w-2xl text-body-sm text-chalk-lo">

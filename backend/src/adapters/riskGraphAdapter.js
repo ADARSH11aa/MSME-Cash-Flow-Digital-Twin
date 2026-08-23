@@ -92,20 +92,32 @@ export function adaptRiskGraph(graph) {
       // leaned on a sector/global prior instead of this customer's own
       // payment history (too few closed invoices to trust yet).
       confidence: n.type === 'invoice' ? (n.confidence ?? 'normal') : undefined,
+      // Model 3's classification. This used to be read only to nudge
+      // severity and then dropped, so an anomaly Model 3 had actually
+      // detected reached the UI as nothing more than a slightly different
+      // border colour - indistinguishable from an invoice that was merely
+      // a bit more overdue. Passing it through lets the node say which.
+      // "normal" (Model 3 checked, found nothing) is left off entirely so
+      // the UI only has a value to render when there is something to say.
+      anomalyType:
+        n.type === 'invoice' && n.anomaly_type && n.anomaly_type !== 'normal'
+          ? n.anomaly_type
+          : undefined,
     };
   });
 
   const outEdges = edges.map((e) => {
     let label = null;
+    let detail = null;
     if (e.type === 'delays') {
       label = `${e.weight} days overdue`;
-      if (e.shap_top_feature) label += ` (driven by ${e.shap_top_feature})`;
+      if (e.shap_top_feature) detail = `Driven by ${e.shap_top_feature}`;
     } else if (e.type === 'reduces') {
       label = 'reduces cash buffer';
     } else if (e.type === 'breaches') {
       label = `${Math.round(e.weight * 100)}% breach probability`;
     }
-    return { from: e.source, to: e.target, label };
+    return { from: e.source, to: e.target, label, detail };
   });
 
   return { nodes: outNodes, edges: outEdges };

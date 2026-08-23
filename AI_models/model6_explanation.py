@@ -37,9 +37,36 @@ REQUEST_TIMEOUT_SECONDS = 8.0
 # reasoning tokens before it writes anything visible. 200 (sized for the old,
 # non-reasoning llama-3.3) left zero room for output text on the real
 # SHAP prompt and silently produced an empty completion every time -
-# indistinguishable from a fallback. 400 was the smallest budget that came
-# back with real content across repeated real-prompt tests.
-MAX_OUTPUT_TOKENS = 400
+# indistinguishable from a fallback.
+#
+# 400 was no better. Measured against the real SHAP prompt, the model spends
+# ~427 tokens on reasoning ALONE before emitting any visible text, so a 400
+# budget was exhausted mid-reasoning every single time: narrate_invoice()
+# returned source="fallback" on 100% of calls while looking like it worked.
+# 800 leaves room for the reasoning plus the 2-3 sentences actually wanted.
+MAX_OUTPUT_TOKENS = 800
+
+# Narration language. MSME owners outside metros do not read English
+# financial dashboards, and Model 6 is the one place in the pipeline whose
+# output is prose rather than numbers - so it is the only place where
+# translation is possible without re-rendering the entire UI.
+#
+# The numeric fidelity check below is script-agnostic: it matches ASCII
+# digits, which these models emit even when writing Devanagari or Tamil
+# prose. A model that returned localised numerals would fail the check and
+# fall back rather than pass an unverified number through, which is the
+# safe direction to fail in.
+DEFAULT_LANGUAGE = "en"
+SUPPORTED_LANGUAGES = {
+    "en": "English",
+    "hi": "Hindi, in Devanagari script",
+    "mr": "Marathi, in Devanagari script",
+    "bn": "Bengali, in Bengali script",
+    "ta": "Tamil, in Tamil script",
+    "te": "Telugu, in Telugu script",
+    "gu": "Gujarati, in Gujarati script",
+    "kn": "Kannada, in Kannada script",
+}
 NUMBER_MATCH_TOLERANCE = 0.6  # allowed rounding slack between LLM text and real numbers
 my_api_key=os.getenv("GROQ_API_KEY")
 _client = groq.Groq(
@@ -66,6 +93,54 @@ Rules you must follow exactly:
    say so plainly rather than stating the number with unwarranted certainty.
 """
 
+# Appended to SYSTEM_PROMPT when a non-English language is requested. Kept
+# separate so the English path's prompt is byte-for-byte what it always was.
+LANGUAGE_INSTRUCTION = """
+6. Write your entire response in {language}. Keep all numbers in the same
+   ASCII digits given to you - do not convert them to another numeral system,
+   and do not translate the numbers into words. Business terms with no
+   natural translation may stay in English.
+"""
+
+
+# Model 5's feature names are column names, not English. Rule 4 of the system
+# prompt asks for no jargon, but the model can only avoid jargon it is never
+# shown - handing it "customer_payment_std" and hoping it paraphrases well is
+# leaving the translation to chance. These labels do it deterministically.
+FEATURE_LABELS = {
+    "previous_payment_days": "how long this customer took to pay their previous invoice",
+    "customer_avg_payment_days": "this customer's long-run average payment time",
+    "customer_recent_avg_payment_days": "this customer's average across their most recent invoices",
+    "customer_payment_std": "how inconsistent this customer's payment timing has been",
+    "payment_behavior_trend": "whether this customer has been speeding up or slowing down lately",
+    "customer_invoice_count": "how many past invoices we have from this customer",
+    "invoice_amount": "the size of this invoice",
+    "payment_term_days": "the payment term agreed on this invoice",
+    "sector": "the customer's industry sector",
+}
+
+# Only the strongest few contributions are sent. Passing all nine produced a
+# dutiful enumeration of every one - the model was answering the data it was
+# given, and the result read as a spreadsheet dump that also ran past the
+# token budget and truncated mid-sentence. The tail contributions were
+# fractions of a day and carried no explanatory weight anyway.
+TOP_CONTRIBUTIONS = 3
+
+
+def _round_for_prompt(value):
+    """
+    Round to one decimal before the model ever sees it.
+
+    Raw SHAP values carry full float precision, and the model faithfully
+    reproduced things like "29.782545223670862 days" in prose meant for a
+    business owner. Rounding at the boundary is the only reliable fix - the
+    numeric fidelity check tolerates it, since _allowed_numbers() compares
+    against rounded values with NUMBER_MATCH_TOLERANCE of slack.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return value
+    return round(float(value), 1)
+
 
 def build_user_message(explanation: dict, confidence: str | None) -> str:
     """
@@ -74,16 +149,23 @@ def build_user_message(explanation: dict, confidence: str | None) -> str:
     confidence is Model 1's "normal" / "low" flag for this invoice (optional).
     """
     lines = [
-        f"average_prediction_across_all_invoices: {explanation['base_value']} days",
-        f"this_invoice_predicted_days: {explanation['predicted_value']} days",
+        f"average_prediction_across_all_invoices: "
+        f"{_round_for_prompt(explanation['base_value'])} days",
+        f"this_invoice_predicted_days: "
+        f"{_round_for_prompt(explanation['predicted_value'])} days",
     ]
     if confidence:
         lines.append(f"prediction_confidence: {confidence}")
-    lines.append("contributing_factors (most influential first):")
-    for c in explanation["contributions"]:
+
+    lines.append(
+        f"top_{TOP_CONTRIBUTIONS}_contributing_factors (most influential first):"
+    )
+    for c in explanation["contributions"][:TOP_CONTRIBUTIONS]:
+        label = FEATURE_LABELS.get(c["feature"], c["feature"])
         lines.append(
-            f"  - feature: {c['feature']}, value: {c['value']}, "
-            f"effect: {c['direction']} the prediction by {abs(c['shap_value'])} days"
+            f"  - factor: {label}, value: {_round_for_prompt(c['value'])}, "
+            f"effect: {c['direction']} the prediction by "
+            f"{_round_for_prompt(abs(c['shap_value']))} days"
         )
 
     return (
@@ -126,29 +208,70 @@ def _numbers_are_valid(text: str, explanation: dict) -> bool:
     return True
 
 
-def fallback_narration(explanation: dict) -> str:
+# Deterministic fallback templates. Only languages with a hand-written
+# template here can be served without the LLM; anything else falls back to
+# English text rather than emitting machine-translated prose nobody reviewed.
+FALLBACK_TEMPLATES = {
+    "en": (
+        "This invoice is predicted at {predicted} days, versus an average of "
+        "{base} days. The biggest factor was '{feature}', which {direction} "
+        "the estimate by {amount} days."
+    ),
+    "hi": (
+        "इस इनवॉइस के लिए {predicted} दिन का अनुमान है, जबकि औसत {base} दिन है। "
+        "सबसे बड़ा कारण '{feature}' रहा, जिसने अनुमान को {amount} दिन "
+        "{direction}।"
+    ),
+}
+
+FALLBACK_DIRECTION_WORDS = {
+    "en": {"increases": "increased", "decreases": "reduced"},
+    "hi": {"increases": "बढ़ाया", "decreases": "घटाया"},
+}
+
+
+def fallback_narration(explanation: dict, language: str = DEFAULT_LANGUAGE) -> str:
     """
     Deterministic, LLM-free narration used whenever the API call fails, times out, or
     fails the numeric fidelity check. Guarantees the demo never shows a broken/empty
     explanation, even if the LLM is unavailable.
     """
+    if language not in FALLBACK_TEMPLATES:
+        language = DEFAULT_LANGUAGE
+
     top = explanation["contributions"][0]
-    direction_word = "increased" if top["direction"] == "increases" else "reduced"
-    return (
-        f"This invoice is predicted at {explanation['predicted_value']} days, versus an "
-        f"average of {explanation['base_value']} days. The biggest factor was "
-        f"'{top['feature']}', which {direction_word} the estimate by "
-        f"{abs(top['shap_value'])} days."
+    # Same rounding and plain-language labelling the LLM path gets - the
+    # fallback is what a judge sees whenever Groq is slow or unreachable, so
+    # it should not be the version that reads like a debug dump.
+    return FALLBACK_TEMPLATES[language].format(
+        predicted=_round_for_prompt(explanation["predicted_value"]),
+        base=_round_for_prompt(explanation["base_value"]),
+        feature=FEATURE_LABELS.get(top["feature"], top["feature"]),
+        direction=FALLBACK_DIRECTION_WORDS[language][top["direction"]],
+        amount=_round_for_prompt(abs(top["shap_value"])),
     )
 
 
-def narrate_invoice(explanation: dict, confidence: str | None = None) -> dict:
+def narrate_invoice(
+    explanation: dict,
+    confidence: str | None = None,
+    language: str = DEFAULT_LANGUAGE,
+) -> dict:
     """
     Main entry point. Returns:
-        {"text": str, "source": "llm" | "fallback"}
+        {"text": str, "source": "llm" | "fallback", "language": str}
     Never raises - any failure (API error, timeout, invented numbers) falls back to a
     deterministic template rather than breaking the caller.
     """
+    if language not in SUPPORTED_LANGUAGES:
+        language = DEFAULT_LANGUAGE
+
+    system_prompt = SYSTEM_PROMPT
+    if language != DEFAULT_LANGUAGE:
+        system_prompt += LANGUAGE_INSTRUCTION.format(
+            language=SUPPORTED_LANGUAGES[language]
+        )
+
     user_message = build_user_message(explanation, confidence)
 
     for attempt in range(2):  # one retry before giving up
@@ -157,14 +280,14 @@ def narrate_invoice(explanation: dict, confidence: str | None = None) -> dict:
                 model=MODEL_NAME,
                 max_tokens=MAX_OUTPUT_TOKENS,
                 messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message},
                 ],
             )
             text = (response.choices[0].message.content or "").strip()
 
             if text and _numbers_are_valid(text, explanation):
-                return {"text": text, "source": "llm"}
+                return {"text": text, "source": "llm", "language": language}
             # Numbers didn't check out - don't retry the same bad output, fall back
             break
         except (groq.APIConnectionError, groq.APIStatusError, groq.APITimeoutError) as exc:
@@ -177,4 +300,8 @@ def narrate_invoice(explanation: dict, confidence: str | None = None) -> dict:
             print(f"[model6] Groq call failed (attempt {attempt + 1}/2): {exc!r}")
             continue  # retry once on transient errors
 
-    return {"text": fallback_narration(explanation), "source": "fallback"}
+    return {
+        "text": fallback_narration(explanation, language),
+        "source": "fallback",
+        "language": language,
+    }

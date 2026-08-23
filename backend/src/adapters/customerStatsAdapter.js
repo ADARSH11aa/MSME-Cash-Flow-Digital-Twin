@@ -96,3 +96,63 @@ export function topCustomerConcentrationPct(raw) {
   const breakdown = concentrationBreakdown(raw);
   return breakdown.length ? breakdown[0].pct : 0.0;
 }
+
+function median(values) {
+  const finite = values.filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+  if (finite.length === 0) return NaN;
+  const mid = Math.floor(finite.length / 2);
+  return finite.length % 2 ? finite[mid] : (finite[mid - 1] + finite[mid]) / 2;
+}
+
+/**
+ * Days Sales Outstanding, benchmarked against the sectors this business
+ * actually trades with.
+ *
+ * "Your customers take 68 days to pay" is a number without a verdict - the
+ * owner has no way to know whether that is normal for who they sell to. The
+ * comparison is what makes it actionable, and it costs nothing extra: the
+ * sector medians come from the same closed invoices already loaded for
+ * paymentBehaviour().
+ *
+ * Median rather than mean throughout - a single 200-day outlier in a small
+ * MSME book would drag a mean somewhere unrepresentative.
+ *
+ * IMPORTANT CAVEAT for how this is presented: the "sector median" here is
+ * computed from THIS business's own invoices within each sector, not from an
+ * external industry benchmark. With one business's data it is a peer
+ * comparison across that business's customer base. Real cross-business
+ * benchmarking needs data this pipeline doesn't have, so the UI must not
+ * imply an industry-wide figure.
+ */
+export function dsoBenchmark(raw) {
+  const closed = raw.filter(
+    (r) => r.status === 'closed' && Number.isFinite(Number(r.days_to_payment)),
+  );
+  if (closed.length === 0) return null;
+
+  const overallDso = median(closed.map((r) => Number(r.days_to_payment)));
+
+  const bySector = new Map();
+  for (const row of closed) {
+    if (!bySector.has(row.sector)) bySector.set(row.sector, []);
+    bySector.get(row.sector).push(Number(row.days_to_payment));
+  }
+
+  const sectors = [...bySector.entries()]
+    .map(([sector, days]) => ({
+      sector,
+      medianDays: roundHalfEven(median(days), 1),
+      invoiceCount: days.length,
+    }))
+    // A "median" over one or two invoices is noise wearing a statistic's
+    // name; leave those sectors out rather than publish a benchmark nobody
+    // should act on.
+    .filter((s) => s.invoiceCount >= 3)
+    .sort((a, b) => b.medianDays - a.medianDays);
+
+  return {
+    overallDsoDays: roundHalfEven(overallDso, 1),
+    sectors,
+    basedOnInvoices: closed.length,
+  };
+}

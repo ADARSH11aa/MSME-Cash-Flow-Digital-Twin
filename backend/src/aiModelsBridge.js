@@ -12,7 +12,7 @@
  */
 import {
   MODEL1_URL, MODEL1_RELOAD_URL, SIMULATE_URL, RISK_GRAPH_URL,
-  RECOMMENDATIONS_URL, RAW_INVOICES_PATH,
+  RECOMMENDATIONS_URL, RAW_INVOICES_PATH, NARRATE_URL, NARRATE_LANGUAGES_URL,
 } from './config.js';
 import { readInvoicesCsv } from './lib/csv.js';
 
@@ -114,6 +114,26 @@ export async function runRecommendations(overdueInvoiceValue) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ overdue_invoice_value: overdueInvoiceValue }),
   });
+}
+
+/** Model 6: plain-language narration of ONE invoice's prediction, in the
+ * requested language. Returns {invoice_id, confidence, text, source,
+ * language} - `source` is "llm" or "fallback", and the UI is expected to
+ * show which, rather than passing deterministic template text off as
+ * model-generated prose. */
+export async function narrateInvoice(invoiceId, language) {
+  return fetchJson(NARRATE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ invoice_id: invoiceId, language }),
+  });
+}
+
+/** Model 6: which languages narration can be rendered in, and whether it's
+ * configured at all (a missing GROQ_API_KEY makes it unavailable without
+ * taking down any other endpoint). */
+export async function narrateLanguages() {
+  return fetchJson(NARRATE_LANGUAGES_URL);
 }
 
 /** The raw invoices.csv itself - used by the customer-stats and

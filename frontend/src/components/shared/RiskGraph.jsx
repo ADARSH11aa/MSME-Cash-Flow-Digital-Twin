@@ -13,8 +13,8 @@ import cn from '@/lib/cn';
  * so adding a node to the mock data does not require hand-positioning it.
  *
  * @param {{
- *   nodes: Array<{ id: string, label: string, type: 'customer'|'event'|'outcome', severity: 'low'|'medium'|'high', confidence?: 'low'|'normal' }>,
- *   edges: Array<{ from: string, to: string, label?: string }>,
+ *   nodes: Array<{ id: string, label: string, type: 'customer'|'event'|'outcome', severity: 'low'|'medium'|'high', confidence?: 'low'|'normal', anomalyType?: string }>,
+ *   edges: Array<{ from: string, to: string, label?: string, detail?: string }>,
  *   onNodeClick?: (node: object) => void,
  *   className?: string,
  * }} props
@@ -24,12 +24,17 @@ export default function RiskGraph({ nodes, edges, onNodeClick, className }) {
 
   return (
     <div className={cn('w-full overflow-x-auto', className)}>
-      {/* Sized to the layout's own width and centered, so the diagram sits in
-          the middle of a wide card instead of hugging the left edge. */}
-      <div
-        className="relative mx-auto"
-        style={{ height: layout.height, width: layout.width }}
-      >
+      {/* "safe center" rather than mx-auto or a plain justify-center: when the
+          diagram is wider than the card, centering it pushes the left-hand
+          columns out past the scroll container's origin, where they can't be
+          scrolled back to — the first and last nodes just sit clipped. "safe"
+          falls back to flex-start exactly in that case, so a wide graph
+          scrolls from its true left edge while a narrow one stays centred. */}
+      <div className="flex" style={{ justifyContent: 'safe center' }}>
+        <div
+          className="relative shrink-0"
+          style={{ height: layout.height, width: layout.width }}
+        >
         {/* Edges are drawn in an SVG layer behind the nodes; the nodes
             themselves stay as real DOM buttons so they are focusable and
             readable by assistive tech without extra ARIA plumbing. */}
@@ -60,7 +65,10 @@ export default function RiskGraph({ nodes, edges, onNodeClick, className }) {
                 stroke="var(--border-onDark)"
                 strokeWidth="1.5"
                 markerEnd="url(#risk-arrow)"
-              />
+                className={edge.detail ? 'pointer-events-auto' : undefined}
+              >
+                {edge.detail ? <title>{edge.detail}</title> : null}
+              </path>
               {edge.label ? (
                 <text
                   x={edge.labelX}
@@ -78,26 +86,43 @@ export default function RiskGraph({ nodes, edges, onNodeClick, className }) {
           ))}
         </svg>
 
-        <ol className="relative m-0 list-none p-0">
-          {layout.nodes.map((node) => (
-            <li
-              key={node.id}
-              className="absolute"
-              style={{
-                left: node.x,
-                top: node.y,
-                width: NODE_WIDTH,
-                transform: 'translateX(-50%)',
-              }}
-            >
-              <RiskNode node={node} onClick={onNodeClick} />
-            </li>
-          ))}
-        </ol>
+          <ol className="relative m-0 list-none p-0">
+            {layout.nodes.map((node) => (
+              <li
+                key={node.id}
+                className="absolute"
+                style={{
+                  left: node.x,
+                  top: node.y,
+                  width: NODE_WIDTH,
+                  transform: 'translateX(-50%)',
+                }}
+              >
+                <RiskNode node={node} onClick={onNodeClick} />
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </div>
   );
 }
+
+/**
+ * Model 3's rule tags (AI_models/anomaly/anomaly_explainer.py), in the words
+ * a business owner would use. Only the open-invoice rules can reach the risk
+ * graph - it is built from open invoices - but the closed-invoice tags are
+ * mapped too, so a future change to Model 8's scope doesn't surface raw
+ * snake_case in the UI.
+ */
+const ANOMALY_LABELS = {
+  severely_overdue: 'Unusually late for this customer',
+  large_amount: 'Unusually large for this sector',
+  large_amount_for_customer: 'Unusually large for this customer',
+  slower_than_usual: 'Slower than this customer’s norm',
+  faster_than_usual: 'Faster than this customer’s norm',
+  unusual_combination: 'Unusual pattern',
+};
 
 function RiskNode({ node, onClick }) {
   const severityStyle = {
@@ -113,16 +138,27 @@ function RiskNode({ node, onClick }) {
 
   const typeLabel = { customer: 'Customer', event: 'Event', outcome: 'Outcome' }[node.type];
   const lowConfidence = node.confidence === 'low';
+  const anomalyLabel = node.anomalyType
+    ? (ANOMALY_LABELS[node.anomalyType] ?? 'Unusual pattern')
+    : null;
+
+  const titleParts = [];
+  if (anomalyLabel) {
+    titleParts.push(
+      `Flagged by anomaly detection: ${anomalyLabel.toLowerCase()}. This invoice stands out against the business's own history, independently of how overdue it is.`,
+    );
+  }
+  if (lowConfidence) {
+    titleParts.push(
+      'This customer has too little payment history for Model 1 to predict from directly — this figure fell back to a sector/industry average instead.',
+    );
+  }
 
   return (
     <button
       type="button"
       onClick={() => onClick?.(node)}
-      title={
-        lowConfidence
-          ? 'This customer has too little payment history for Model 1 to predict from directly — this figure fell back to a sector/industry average instead.'
-          : undefined
-      }
+      title={titleParts.length ? titleParts.join('\n\n') : undefined}
       className={cn(
         'w-full border px-3 py-2.5 text-left transition-all duration-200',
         'hover:shadow-card-dark',
@@ -135,6 +171,15 @@ function RiskNode({ node, onClick }) {
         <span className={cn('text-label-xs uppercase', severityText)}>{severityLabel}</span>
       </span>
       <span className="mt-1 block text-body-sm leading-snug">{node.label}</span>
+      {/* Model 3's finding, kept visually distinct from severity: severity is
+          "how bad", this is "and it doesn't fit the usual pattern" - two
+          different claims that shouldn't collapse into one colour. */}
+      {anomalyLabel ? (
+        <span className="mt-1 flex items-center gap-1 text-label-xs uppercase text-caution">
+          <span className="h-1.5 w-1.5 shrink-0 rotate-45 bg-caution" aria-hidden="true" />
+          {anomalyLabel}
+        </span>
+      ) : null}
       {lowConfidence ? (
         <span className="mt-1 flex items-center gap-1 text-label-xs uppercase text-chalk-lo">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-chalk-lo" aria-hidden="true" />
@@ -145,12 +190,16 @@ function RiskNode({ node, onClick }) {
   );
 }
 
-const NODE_WIDTH = 220;
-// Sized for a two-line node label — the longest the risk graph produces. The
-// rank gap has to clear the edge labels that sit at the midpoint between ranks.
-const NODE_HEIGHT = 76;
+const NODE_WIDTH = 190;
+// Nodes are positioned by their top edge and size themselves, so this is the
+// height the LAYOUT reserves — it has to cover the tallest node the graph can
+// produce or the edges below will run underneath one. The tallest is an
+// invoice with a two-line label plus both badge rows (Model 3's anomaly tag
+// and Model 1's low-confidence flag). The rank gap on top of that has to
+// clear the edge labels sitting at the midpoint between ranks.
+const NODE_HEIGHT = 104;
 const RANK_GAP = 58;
-const COLUMN_GAP = 24;
+const COLUMN_GAP = 20;
 
 /**
  * Assign each node a rank (its longest distance from a root) and spread nodes

@@ -117,15 +117,15 @@ async function projectedCashLineage() {
 }
 
 async function currentCashLineage() {
-  const dashboard = await request('/api/dashboard?horizon=30');
+  const { currentCash } = await request('/api/dashboard/current-cash');
   return {
     label: 'Current cash',
-    total: dashboard.currentCash,
+    total: currentCash,
     explanation: 'The opening-cash figure Model 2\'s simulation starts every forecast from.',
     lineItems: [
       {
         label: 'Opening cash',
-        amount: dashboard.currentCash,
+        amount: currentCash,
         sign: '+',
         source: 'Model 2 opening-cash assumption (backend/src/config.js)',
         confidence: 'high',

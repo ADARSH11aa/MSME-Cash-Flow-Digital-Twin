@@ -12,6 +12,10 @@ Also exposes:
     Model 5:
         POST /explain/invoices
 
+    Model 6:
+        POST /narrate/invoice
+        GET  /narrate/languages
+
     Model 7:
         POST /recommendations
 
@@ -57,6 +61,24 @@ from ocr_extraction import extract_invoice
 from simulation.monte_carlo import simulate_cashflow
 from risk_graph.build_risk_graph import build_risk_graph
 from model_7 import rank_recovery_options
+
+# Model 6 builds its Groq client at import time, which raises if GROQ_API_KEY
+# is unset. Narration is the one optional model here - every other endpoint
+# works without it - so an absent key degrades /narrate/invoice to a 503
+# rather than stopping the whole server from booting.
+try:
+    from model6_explanation import (
+        narrate_invoice as narrate_explanation,
+        SUPPORTED_LANGUAGES,
+        DEFAULT_LANGUAGE,
+    )
+    MODEL6_IMPORT_ERROR = None
+except Exception as exc:  # noqa: BLE001 - surfaced via /health and the route
+    narrate_explanation = None
+    SUPPORTED_LANGUAGES = {}
+    DEFAULT_LANGUAGE = "en"
+    MODEL6_IMPORT_ERROR = repr(exc)
+    print(f"[main] Model 6 narration unavailable: {exc!r}")
 
 
 # ============================================================
@@ -218,6 +240,11 @@ class InvoiceInput(BaseModel):
     invoice_amount: float
     payment_term_days: int
     issue_date: date
+
+
+class NarrateRequest(BaseModel):
+    invoice_id: str
+    language: str = DEFAULT_LANGUAGE
 
 
 class PredictionOutput(BaseModel):
@@ -546,6 +573,79 @@ def explain_invoices(
     )
 
     return explanations
+
+
+# ============================================================
+# MODEL 6 - LLM NARRATION
+# ============================================================
+
+@app.get("/narrate/languages")
+def narrate_languages():
+    """Languages /narrate/invoice can render an explanation in."""
+    return {
+        "available": narrate_explanation is not None,
+        "default": DEFAULT_LANGUAGE,
+        "languages": SUPPORTED_LANGUAGES,
+    }
+
+
+@app.post("/narrate/invoice")
+def narrate_invoice_endpoint(request: NarrateRequest):
+    """
+    Plain-language explanation of ONE invoice's prediction.
+
+    Chains Model 1 (for the confidence flag) and Model 5 (for the SHAP
+    contributions) and hands both to Model 6. The LLM sees only those
+    numbers - it never reads the invoice database or the model itself, and
+    a numeric-fidelity check in model6_explanation.py rejects any response
+    that mentions a number it was not given.
+
+    Per-invoice and on demand by design: narration is the one place in this
+    pipeline that costs an external API call, so it is never run in bulk
+    across the whole invoice list.
+    """
+
+    if narrate_explanation is None:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Model 6 narration is unavailable - check GROQ_API_KEY is set "
+                f"in AI_models/.env. Import error: {MODEL6_IMPORT_ERROR}"
+            ),
+        )
+
+    if artifacts is None or shap_artifacts is None:
+        raise HTTPException(status_code=503, detail="model not loaded yet")
+
+    raw = pd.read_csv(RAW_INVOICES_PATH)
+    match = raw[raw["invoice_id"] == request.invoice_id]
+
+    if match.empty:
+        raise HTTPException(
+            status_code=404,
+            detail=f"invoice {request.invoice_id} not found in {RAW_INVOICES_PATH.name}",
+        )
+
+    invoice = match.head(1).copy()
+    invoice["issue_date"] = pd.to_datetime(invoice["issue_date"])
+
+    explanation = explain_invoice(invoice, shap_artifacts)[0]
+    confidence = predict_payment_window(invoice, artifacts)["confidence"].iloc[0]
+
+    result = narrate_explanation(
+        explanation,
+        confidence=confidence,
+        language=request.language,
+    )
+
+    return {
+        "invoice_id": request.invoice_id,
+        "confidence": confidence,
+        # "llm" vs "fallback" is surfaced deliberately - a demo showing
+        # deterministic template text should say so rather than pass it off
+        # as model-generated prose.
+        **result,
+    }
 
 
 # ============================================================
