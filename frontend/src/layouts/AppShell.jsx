@@ -155,17 +155,12 @@ function Sidebar({ expanded, onToggle }) {
       {/* Top Header & Brand */}
       <div className="hidden md:flex md:w-full md:flex-col md:gap-4">
         <div className="flex items-center justify-between px-1.5 py-2 border-b border-edge-dark/60 pb-3">
-<<<<<<< HEAD:frontend/src/layouts/AppShell.jsx
-          <Link to="/" className="flex items-center gap-2.5 min-w-0 overflow-hidden">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-surface-2 border border-edge-dark">
-=======
           <Link
             to="/"
             title="Go to CashTwin Homepage"
             className="flex items-center gap-2.5 min-w-0 overflow-hidden group"
           >
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-2 border border-edge-dark group-hover:border-lime transition-colors">
->>>>>>> arpit-ui:src/layouts/AppShell.jsx
               <LogoMark className="h-5 w-5" />
             </span>
             {expanded ? (

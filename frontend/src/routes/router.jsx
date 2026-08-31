@@ -42,14 +42,6 @@ export const router = createBrowserRouter([
   {
     element: <PublicOnlyRoute />,
     children: [
-<<<<<<< HEAD:frontend/src/routes/router.jsx
-      { index: true, element: <DashboardPage /> },
-      { path: 'scenarios', element: <ScenarioSimulatorPage /> },
-      { path: 'recommendations', element: <RecommendationsPage /> },
-      { path: 'explainability', element: <ExplainabilityPage /> },
-      { path: 'invoices', element: <InvoiceReviewPage /> },
-      { path: 'statutory', element: <StatutoryPage /> },
-=======
       { path: '/login', element: <LoginPage /> },
       { path: '/signup', element: <SignupPage /> },
     ],
@@ -58,7 +50,6 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       { path: '/onboarding', element: <OnboardingFlow /> },
->>>>>>> arpit-ui:src/routes/router.jsx
       {
         path: '/app',
         element: <AppShell />,
