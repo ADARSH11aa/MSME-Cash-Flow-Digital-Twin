@@ -1,7 +1,9 @@
 import {
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
   FileText,
+  Home,
   LayoutDashboard,
   Lightbulb,
   LogOut,
@@ -116,6 +118,24 @@ function Sidebar({ expanded, onToggle }) {
     }
   };
 
+  const homeLink = (
+    <Link
+      to="/"
+      className={cn(
+        'group flex h-10 w-full items-center gap-3 rounded-lg px-2.5 transition-all text-body-sm font-medium',
+        'text-chalk-lo hover:bg-surface-2 hover:text-chalk-hi border border-transparent',
+      )}
+    >
+      <Home className="h-5 w-5 shrink-0 text-lime" aria-hidden="true" />
+      {expanded ? (
+        <span className="truncate flex items-center justify-between flex-1">
+          <span>Go to Homepage</span>
+          <ExternalLink className="h-3.5 w-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+        </span>
+      ) : null}
+    </Link>
+  );
+
   return (
     <aside
       aria-label="Main"
@@ -129,13 +149,19 @@ function Sidebar({ expanded, onToggle }) {
       {/* Top Header & Brand */}
       <div className="hidden md:flex md:w-full md:flex-col md:gap-4">
         <div className="flex items-center justify-between px-1.5 py-2 border-b border-edge-dark/60 pb-3">
-          <Link to="/" className="flex items-center gap-2.5 min-w-0 overflow-hidden">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-2 border border-edge-dark">
+          <Link
+            to="/"
+            title="Go to CashTwin Homepage"
+            className="flex items-center gap-2.5 min-w-0 overflow-hidden group"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-2 border border-edge-dark group-hover:border-lime transition-colors">
               <LogoMark className="h-5 w-5" />
             </span>
             {expanded ? (
               <div className="min-w-0 flex-1">
-                <p className="font-display text-sm font-bold text-chalk-hi truncate">CashTwin</p>
+                <p className="font-display text-sm font-bold text-chalk-hi group-hover:text-lime transition-colors truncate">
+                  CashTwin
+                </p>
                 <p className="text-[10px] text-chalk-lo truncate font-mono uppercase">
                   {businessName || 'Hussain Crafts'}
                 </p>
@@ -188,8 +214,23 @@ function Sidebar({ expanded, onToggle }) {
               </Tooltip>
             );
           })}
+
+          {/* Explicit Go to Homepage Link */}
+          <div className="pt-2 mt-2 border-t border-edge-dark/50">
+            {expanded ? (
+              homeLink
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>{homeLink}</TooltipTrigger>
+                <TooltipContent side="right" sideOffset={14} className="z-[9999] hidden md:block">
+                  Go to Homepage
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
         </nav>
       </div>
+
 
       {/* Mobile nav (all items horizontal) */}
       <div className="flex md:hidden w-full items-center justify-around">
