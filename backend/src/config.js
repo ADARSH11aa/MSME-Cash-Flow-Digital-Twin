@@ -92,6 +92,45 @@ export const DEFAULT_N_SIMS = Number(process.env.DEMO_N_SIMS ?? 3000);
 // backlog as one hairball - see AI_models/risk_graph/build_risk_graph.py.
 export const RISK_GRAPH_MAX_FOCUS_INVOICES = Number(process.env.RISK_GRAPH_MAX_FOCUS_INVOICES ?? 6);
 
+// MSMED Act 2006, Section 15: a buyer must pay an MSME supplier within the
+// agreed term, and no agreed term can exceed 45 days from acceptance. A
+// longer term written into the contract is unenforceable past this cap, so
+// the statutory due date - not the invoice's own due_date - is the date a
+// delay is legally measured from.
+export const STATUTORY_TERM_DAYS = Number(process.env.STATUTORY_TERM_DAYS ?? 45);
+
+// Section 16: interest on a delayed payment accrues at three times the bank
+// rate notified by the RBI, compounded with monthly rests, and is owed
+// automatically rather than on request.
+//
+// RBI_BANK_RATE must be checked against RBI's currently notified bank rate -
+// it moves with monetary policy, and every interest figure this backend
+// reports is wrong by the same proportion if it is stale.
+export const RBI_BANK_RATE = Number(process.env.RBI_BANK_RATE ?? 0.06);
+export const STATUTORY_INTEREST_MULTIPLE = Number(process.env.STATUTORY_INTEREST_MULTIPLE ?? 3);
+
+// Section 2(n) defines a "supplier" as a MICRO or SMALL enterprise. A medium
+// enterprise is not a supplier and cannot claim any of Chapter V - no 45-day
+// cap, no Section 16 interest, no MSEFC referral. Showing a medium enterprise
+// an interest entitlement would be showing it money it has no claim to, so
+// this gates the whole statutory surface rather than decorating it.
+//
+// Placeholder until onboarding captures the real classification (Udyam
+// registration is what establishes it - see Section 8(1)). 'small' is the
+// permissive default purely so the demo dataset renders; a real deployment
+// must not guess this.
+export const ENTERPRISE_TIER = process.env.ENTERPRISE_TIER ?? 'small';
+
+// A small enterprise that grows into medium keeps its Chapter V rights for
+// three years from the date of upgradation. ISO date, or null if the
+// business was never upgraded.
+export const UPGRADED_TO_MEDIUM_ON = process.env.UPGRADED_TO_MEDIUM_ON ?? null;
+
+// Limitation Act: a money claim is time-barred after three years, so
+// interest forfeited on invoices settled longer ago than this is history,
+// not a claim anyone can still file.
+export const CLAIM_LIMITATION_YEARS = Number(process.env.CLAIM_LIMITATION_YEARS ?? 3);
+
 export const CORS_ORIGINS = (
   process.env.CORS_ORIGINS ?? 'http://localhost:5173,http://127.0.0.1:5173'
 ).split(',');

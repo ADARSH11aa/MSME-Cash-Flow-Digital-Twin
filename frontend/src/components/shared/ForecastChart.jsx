@@ -94,9 +94,15 @@ export default function ForecastChart({
             y={minimumBuffer}
             stroke="var(--risk-amber)"
             strokeDasharray="4 4"
+            // Anchored right to clear the TODAY marker (which sits at
+            // insideBottomLeft), and lifted with dy because when cash is
+            // healthy this line sits near the floor of the plot, where the
+            // label would otherwise sit on top of the x-axis tick labels.
+            // Both corners collide at that height without the offset.
             label={{
               value: 'MIN BUFFER',
-              position: 'insideTopLeft',
+              position: 'insideTopRight',
+              dy: -8,
               fill: 'var(--risk-amber)',
               fontSize: 10,
               letterSpacing: '0.08em',

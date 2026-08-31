@@ -214,8 +214,17 @@ export default function ScenarioSimulatorPage() {
             {result ? (
               <ForecastChart
                 forecast={result.after}
-                baseline={result.before}
-                minimumBuffer={BUSINESS.minimumBuffer}
+                // Drawn only once a scenario is applied — at baseline it is
+                // the identical series, rendering a dashed line exactly
+                // underneath the expected curve for no reason.
+                baseline={dirty ? result.before : undefined}
+                // The buffer the backend actually measured daysToBreach
+                // against. This used to read BUSINESS.minimumBuffer — a demo
+                // fixture (₹2L) drawn under a real forecast at crore scale,
+                // so the threshold line sat on the floor of the chart and
+                // disagreed with both the breach figures beside it and the
+                // dashboard's own buffer line.
+                minimumBuffer={result.minimumBuffer ?? BUSINESS.minimumBuffer}
                 emphasis={band}
                 height={340}
                 ariaSummary={`Under this scenario, cash falls below the buffer after ${result.daysToBreachAfter ?? 'no'} days, compared with ${result.daysToBreachBefore ?? 'no'} days before.`}
@@ -224,13 +233,19 @@ export default function ScenarioSimulatorPage() {
               <div className="h-[340px] animate-pulse rounded-card bg-surface-2" />
             )}
 
-            <p className="mt-4 flex items-center gap-2 text-body-sm text-chalk-lo">
-              <span
-                className="w-6 shrink-0 border-t-2 border-dashed border-chalk-lo/60"
-                aria-hidden="true"
-              />
-              Dashed grey line shows your forecast before this scenario was applied.
-            </p>
+            {/* Only meaningful once something has actually been changed. At
+                baseline `before` and `after` are the same series, so the
+                dashed line sits exactly under the expected curve and this
+                caption described a comparison that was not on screen. */}
+            {dirty ? (
+              <p className="mt-4 flex items-center gap-2 text-body-sm text-chalk-lo">
+                <span
+                  className="w-6 shrink-0 border-t-2 border-dashed border-chalk-lo/60"
+                  aria-hidden="true"
+                />
+                Dashed grey line shows your forecast before this scenario was applied.
+              </p>
+            ) : null}
           </Card>
 
           {result ? <BandTable bands={result.bands} activeBand={band} onSelect={setBand} /> : null}

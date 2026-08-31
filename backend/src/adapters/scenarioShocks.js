@@ -51,6 +51,26 @@ export function applyShocks(predictions, raw, openingCash, dailyExpense, shocks)
     shockedOpeningCash = openingCash + shocks.immediateInflow;
   }
 
+  // A statutory interest claim is money that does not exist in the invoice
+  // book at all - it is never billed, so no prediction row carries it. It is
+  // injected as a synthetic invoice rather than added to opening cash
+  // because it does NOT arrive today: an MSEFC reference runs to 90 days, and
+  // dropping it into opening cash would draw a forecast where the money is
+  // already banked. Zero spread across p10/p50/p90 is deliberate - the amount
+  // is fixed by statute, so the only uncertainty is whether it is paid at
+  // all, which a cash-flow band cannot express honestly either way.
+  if (shocks.statutoryClaim?.amount > 0) {
+    const { amount, days = 90 } = shocks.statutoryClaim;
+    shocked.push({
+      invoice_id: 'STATUTORY-INTEREST-CLAIM',
+      invoice_amount: amount,
+      days_since_issue: 0,
+      p10_payment_days: days,
+      p50_payment_days: days,
+      p90_payment_days: days,
+    });
+  }
+
   if (shocks.deferredObligations || shocks.deferDays) {
     unhandled.push('deferredObligations/deferDays: no per-obligation dataset in the real pipeline');
   }

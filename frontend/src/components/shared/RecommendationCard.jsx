@@ -42,12 +42,15 @@ export default function RecommendationCard({ recommendation, onSimulate, classNa
     features = [],
   } = recommendation;
 
-  const categoryLabel = {
-    internal: 'Internal action',
-    commercial: 'Commercial action',
-    invoice_finance: 'Invoice finance',
-    working_capital: 'Working capital',
-  }[category];
+  const categoryLabel =
+    {
+      internal: 'Internal action',
+      commercial: 'Commercial action',
+      invoice_finance: 'Invoice finance',
+      working_capital: 'Working capital',
+      // A statutory entitlement, not a strategy anyone has to negotiate.
+      legal: 'Statutory right',
+    }[category] ?? 'Recovery option';
 
   // Debt-bearing options are labelled as such up front rather than being
   // distinguished only by their position in the row.

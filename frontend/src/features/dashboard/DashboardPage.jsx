@@ -19,10 +19,12 @@ import {
   getConcentrationBreakdown,
   getDashboard,
   getPaymentBehaviour,
+  getStatutoryExposure,
 } from '@/mocks/api/dashboard';
 import HeroStatStrip from './components/HeroStatStrip';
 import ObligationsList from './components/ObligationsList';
 import RiskBreakdownRow from './components/RiskBreakdownRow';
+import StatutoryPositionBanner from './components/StatutoryPositionBanner';
 
 /**
  * Dashboard (PRD 3.4) — the digital twin view and the product's home screen.
@@ -34,6 +36,7 @@ export default function DashboardPage() {
   const { data: behaviour } = useAsync(() => getPaymentBehaviour(), []);
   const { data: concentration } = useAsync(() => getConcentrationBreakdown(), []);
   const { data: buffer } = useAsync(() => getBufferPressure(horizon), [horizon]);
+  const { data: statutory } = useAsync(() => getStatutoryExposure(), []);
 
   if (loading && !data) return <DashboardSkeleton />;
 
@@ -141,6 +144,8 @@ export default function DashboardPage() {
           </Card>
         </BracketFrame>
       </StaggerItem>
+
+      {statutory ? <StatutoryPositionBanner exposure={statutory} /> : null}
 
       <ObligationsList obligations={data.upcomingObligations} />
 

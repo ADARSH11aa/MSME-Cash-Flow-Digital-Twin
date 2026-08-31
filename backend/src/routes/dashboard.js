@@ -13,6 +13,7 @@ import * as bridge from '../aiModelsBridge.js';
 import * as forecastAdapter from '../adapters/forecastAdapter.js';
 import * as riskGraphAdapter from '../adapters/riskGraphAdapter.js';
 import * as customerStatsAdapter from '../adapters/customerStatsAdapter.js';
+import * as msmedAdapter from '../adapters/msmedAdapter.js';
 import {
   DEFAULT_OPENING_CASH, DEFAULT_DAILY_EXPENSE, DEFAULT_MIN_BUFFER,
   DEFAULT_N_SIMS, RISK_GRAPH_MAX_FOCUS_INVOICES,
@@ -117,6 +118,15 @@ router.get('/dso-benchmark', (req, res) => {
     return;
   }
   res.json(benchmark);
+});
+
+/**
+ * MSMED Act statutory position - Sections 15/16/18. Pure arithmetic over
+ * invoices.csv like /dso-benchmark, so no model call, no cache, no await.
+ */
+router.get('/statutory-exposure', (req, res) => {
+  const raw = bridge.loadRaw();
+  res.json(msmedAdapter.statutoryExposure(raw));
 });
 
 /**

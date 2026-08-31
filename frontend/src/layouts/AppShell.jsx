@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Lightbulb,
   LogOut,
+  Scale,
   Settings,
   SlidersHorizontal,
   Waypoints,
@@ -29,6 +30,7 @@ const NAV = [
   { to: '/app/scenarios', label: 'Scenarios', Icon: SlidersHorizontal },
   { to: '/app/recommendations', label: 'Recovery Options', Icon: Lightbulb },
   { to: '/app/explainability', label: 'Risk Graph', Icon: Waypoints },
+  { to: '/app/statutory', label: 'Legal Position', Icon: Scale },
   { to: '/app/invoices', label: 'Invoices', Icon: FileText },
   { to: '/app/settings', label: 'Settings', Icon: Settings },
 ];

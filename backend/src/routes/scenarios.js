@@ -29,6 +29,7 @@ function pickScenarioFields(body = {}) {
   if (body.deferredObligations != null) scenario.deferredObligations = body.deferredObligations;
   if (body.deferDays != null) scenario.deferDays = body.deferDays;
   if (body.immediateInflow != null) scenario.immediateInflow = body.immediateInflow;
+  if (body.statutoryClaim != null) scenario.statutoryClaim = body.statutoryClaim;
   return scenario;
 }
 
@@ -72,6 +73,10 @@ router.post('/run', async (req, res) => {
     daysToBreachAfter: shockedSummary.days_to_likely_breach,
     projectedCashBefore: forecastAdapter.projectedCashEndOfHorizon(baseForecast),
     projectedCashAfter: forecastAdapter.projectedCashEndOfHorizon(shockedForecast),
+    // The buffer the breach figures above were actually measured against.
+    // Without it the chart drew its threshold line from a demo fixture while
+    // these numbers came from here - two different buffers on one screen.
+    minimumBuffer: DEFAULT_MIN_BUFFER,
     bands: ['optimistic', 'expected', 'pessimistic'].map((band) => ({
       band,
       closing: afterPoints[afterPoints.length - 1][band],

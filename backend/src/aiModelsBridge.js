@@ -10,6 +10,7 @@
  * see that file's module docstring for the endpoint list. This gateway has
  * no Python dependency at all.
  */
+import fs from 'node:fs';
 import {
   MODEL1_URL, MODEL1_RELOAD_URL, SIMULATE_URL, RISK_GRAPH_URL,
   RECOMMENDATIONS_URL, RAW_INVOICES_PATH, NARRATE_URL, NARRATE_LANGUAGES_URL,
@@ -136,11 +137,31 @@ export async function narrateLanguages() {
   return fetchJson(NARRATE_LANGUAGES_URL);
 }
 
-/** The raw invoices.csv itself - used by the customer-stats and
- * scenario-shocks adapters, which need columns (customer_name,
- * cust_number, status) that Model 1's predictions don't carry. */
+/**
+ * The raw invoices.csv itself - used by the customer-stats, MSMED and
+ * scenario-shocks adapters, which need columns (customer_name, cust_number,
+ * status, actual_paid_date) that Model 1's predictions don't carry.
+ *
+ * Cached on the file's mtime+size. Six endpoints call this, several of them
+ * on every dashboard render, and each call was a synchronous readFileSync
+ * plus a full CSV parse of 5,000+ rows on the event loop. Keying on stat()
+ * rather than an explicit invalidate() means an upload (which rewrites the
+ * file) invalidates this on its own, and so does anyone editing the CSV by
+ * hand - there is no cache-clearing call anybody can forget to make.
+ *
+ * Returns the same array on a hit, so callers must treat it as read-only.
+ * Every current caller filters/maps rather than mutating.
+ */
+let rawCache = null;
+
 export function loadRaw() {
-  return readInvoicesCsv(RAW_INVOICES_PATH);
+  const { mtimeMs, size } = fs.statSync(RAW_INVOICES_PATH);
+  if (rawCache && rawCache.mtimeMs === mtimeMs && rawCache.size === size) {
+    return rawCache.rows;
+  }
+  const rows = readInvoicesCsv(RAW_INVOICES_PATH);
+  rawCache = { mtimeMs, size, rows };
+  return rows;
 }
 
 /** Tells Model 1's server to re-read invoices.csv and rebuild its

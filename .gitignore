@@ -42,6 +42,11 @@ $RECYCLE.BIN/
 .cache
 .vite
 coverage
+graphify-out/
+
+# Runtime-generated data backups — routes/data.js rewrites these on every CSV
+# upload, so tracking them makes any upload dirty the working tree.
+*.csv.backup
 
 # Scratch / diagnostic files (temporary harnesses, probes, tuning scripts)
 probe.mjs

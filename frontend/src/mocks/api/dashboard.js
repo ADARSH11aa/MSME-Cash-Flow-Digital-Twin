@@ -42,6 +42,37 @@ export function getConcentrationBreakdown() {
   return request('/api/dashboard/concentration-breakdown');
 }
 
+/**
+ * Statutory position under the MSMED Act 2006 — what the law says is owed on
+ * invoices past their 45-day statutory due date, which is a different (and
+ * earlier) date than the one printed on the invoice.
+ *
+ * `eligibility.isSupplier` gates everything else: a medium enterprise is not
+ * a "supplier" under Section 2(n) and has no claim at all, in which case
+ * `totals` and `historical` come back null rather than zeroed.
+ *
+ * @returns {Promise<{
+ *   eligibility: { isSupplier: boolean, tier: string, basis: string, graceEndsOn?: string },
+ *   statutoryTermDays: number,
+ *   interestRateAnnualPct: number,
+ *   clockStartsFrom: string,
+ *   totals: {
+ *     interestOwed: number, principalPastStatutoryDue: number,
+ *     invoicesPastStatutoryDue: number, invoicesWithTermBeyondCap: number,
+ *     msefcEligibleCustomers: number
+ *   }|null,
+ *   customers: Array<object>,
+ *   invoices: Array<object>,
+ *   historical: {
+ *     interestForfeited: number, principal: number,
+ *     invoiceCount: number, limitationYears: number
+ *   }|null
+ * }>}
+ */
+export function getStatutoryExposure() {
+  return request('/api/dashboard/statutory-exposure');
+}
+
 /** Cash-buffer pressure sparkline — closing balance per day (PRD 3.4.4). */
 export function getBufferPressure(horizon = 30) {
   return request(`/api/dashboard/buffer-pressure?horizon=${horizon}`);

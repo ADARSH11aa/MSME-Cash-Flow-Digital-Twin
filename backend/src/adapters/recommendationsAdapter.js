@@ -71,6 +71,69 @@ function capitalize(s) {
   return s[0].toUpperCase() + s.slice(1);
 }
 
+/**
+ * The statutory option, which Model 7 cannot rank because it does not know
+ * the law exists.
+ *
+ * It belongs on this page and belongs first: it costs nothing, adds no debt,
+ * needs no counterparty's consent, and the money is already the supplier's by
+ * statute. Without it the page ranks a paid discount above a free
+ * entitlement, which is exactly backwards for a product whose stated premise
+ * is "actions that cost nothing come first".
+ *
+ * It is deliberately NOT given isRecommended. Model 7 ranks on speed and
+ * liquidity as well as cost, and an MSEFC reference takes months - quietly
+ * overriding the model's pick with a slower option would be a product
+ * decision disguised as a ranking.
+ *
+ * exposure: statutoryExposure()'s output, or null when the business is not a
+ * "supplier" under Section 2(n) and has no claim to offer.
+ */
+export function statutoryRecommendation(exposure) {
+  if (!exposure?.eligibility?.isSupplier) return null;
+  const { totals, limitation, taxLeverage } = exposure;
+  if (!totals || totals.interestOwed <= 0) return null;
+
+  const features = [
+    'No cost, no debt, and no lender consent needed',
+    `Applies to ${totals.msefcEligibleCustomers} buyers already past the statutory date`,
+    // Section 18(5) puts a 90-day outer limit on an MSEFC reference, which is
+    // the honest counterweight to "free": it is the slowest option here.
+    'Slower than the others — an MSEFC reference runs to 90 days',
+  ];
+
+  if (limitation?.expiringSoonCount > 0) {
+    features.push(
+      `${limitation.expiringSoonCount} of these claims are time-barred within ${limitation.warningWindowDays} days`,
+    );
+  }
+
+  if (taxLeverage) {
+    features.push(
+      `Your buyers cannot deduct these bills until paid — ${taxLeverage.daysUntilFiscalYearEnd} days to ${taxLeverage.fiscalYearEndsOn}`,
+    );
+  }
+
+  return {
+    id: 'rec-statutory-interest',
+    strategy: 'Statutory Interest Claim',
+    category: 'legal',
+    illustrativeCost: 0,
+    recoveryTimeDays: 90,
+    liquidityImpact: `Recovers ₹${formatThousands(totals.interestOwed)} you are already owed under Section 16`,
+    isRecommended: false,
+    goal: 'Invoice the interest the MSMED Act already entitles you to, and refer buyers who still will not pay.',
+    features,
+    risk: 'Low — the entitlement is statutory, but pursuing it strains the customer relationship',
+    // Not immediateInflow: unlike the other options this does not pull
+    // forward money already in the book, it claims money never billed, and
+    // it lands at the end of an MSEFC reference rather than today. The
+    // simulator injects it as a synthetic invoice paying on that day - see
+    // scenarioShocks.js.
+    shocks: { statutoryClaim: { amount: totals.interestOwed, days: 90 } },
+  };
+}
+
 /** ranked: rankRecoveryOptions()'s output list, already sorted best-first.
  * overdueInvoiceValue: same figure passed into Model 7, used to turn its
  * percentage gap_reduction into a rupee amount for liquidityImpact/shocks. */

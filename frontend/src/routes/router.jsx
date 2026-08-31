@@ -8,6 +8,7 @@ import ScenarioSimulatorPage from '@/features/scenarios/ScenarioSimulatorPage';
 import RecommendationsPage from '@/features/recommendations/RecommendationsPage';
 import ExplainabilityPage from '@/features/explainability/ExplainabilityPage';
 import InvoiceReviewPage from '@/features/invoices/InvoiceReviewPage';
+import StatutoryPage from '@/features/statutory/StatutoryPage';
 import SettingsLayout from '@/features/settings/SettingsLayout';
 import PrivacyConsentPage from '@/features/settings/PrivacyConsentPage';
 import AuditLogPage from '@/features/settings/AuditLogPage';
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
       { path: 'recommendations', element: <RecommendationsPage /> },
       { path: 'explainability', element: <ExplainabilityPage /> },
       { path: 'invoices', element: <InvoiceReviewPage /> },
+      { path: 'statutory', element: <StatutoryPage /> },
       {
         path: 'settings',
         element: <SettingsLayout />,

@@ -2,7 +2,7 @@ import { ArrowRight, CalendarClock, Lightbulb, Wallet } from 'lucide-react';
 import cn from '@/lib/cn';
 import Figure from '@/components/shared/Figure';
 import useCountUp from '@/hooks/useCountUp';
-import { riskToneForDays } from '@/lib/format';
+import { formatCurrencyShort, riskToneForDays } from '@/lib/format';
 
 /**
  * The before/after delta strip (PRD 3.5) — the product's key moment, so the
@@ -106,9 +106,13 @@ function DaysCard({ before, after, delta, risk }) {
           data-numeric
           className={cn('font-display text-display-lg leading-none tabular', tone.text)}
         >
-          {after == null ? '—' : Math.round(animated)}
+          {after == null ? 'None' : Math.round(animated)}
         </span>
-        <span className="font-sans text-heading-md font-medium text-chalk-lo">days</span>
+        {/* No unit when there is no breach — "— days" read as a figure that
+            had failed to load rather than as an absence of one. */}
+        {after == null ? null : (
+          <span className="font-sans text-heading-md font-medium text-chalk-lo">days</span>
+        )}
       </div>
 
       {changed ? (
@@ -136,6 +140,15 @@ function CashCard({ before, after }) {
   const changed = delta !== 0;
   const positive = delta >= 0;
 
+  // Both figures render through formatCurrencyShort, precise to one decimal
+  // of a crore - so a real ₹2L move on a ₹3.6Cr balance is `changed` but
+  // draws "₹3.6Cr → ₹3.6Cr", the struck-through rendering fault this
+  // component's docstring exists to prevent. The delta pill still carries the
+  // move (and is the only place it is legible at this scale); only the
+  // before/after transition is suppressed, since it would show two identical
+  // figures either side of an arrow.
+  const transitionVisible = changed && formatCurrencyShort(before) !== formatCurrencyShort(after);
+
   return (
     <DeltaCard
       tone={{ border: changed && !positive ? 'border-risk/40' : 'border-edge-dark' }}
@@ -144,7 +157,7 @@ function CashCard({ before, after }) {
       label="Projected cash"
     >
       <div className="mt-4 flex flex-wrap items-baseline gap-2">
-        {changed ? (
+        {transitionVisible ? (
           <>
             <span data-numeric className="tabular text-heading-md text-chalk-lo/70 line-through">
               <Figure value={before} variant="currencyShort" />
