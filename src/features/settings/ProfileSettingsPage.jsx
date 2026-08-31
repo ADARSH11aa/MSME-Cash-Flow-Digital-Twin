@@ -3,17 +3,19 @@ import { Building2, Mail, MapPin, Phone, Save, ShieldCheck, User } from 'lucide-
 import Button from '@/components/shared/Button';
 import { useToast } from '@/components/shared/Toast';
 import { recordAuditEvent } from '@/mocks/api/auditLog';
+import { useAuth } from '@/features/auth/AuthContext';
 
 export default function ProfileSettingsPage() {
   const { toast } = useToast();
+  const { currentUser, businessName, updateUserProfile, setBusiness } = useAuth();
   const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
-    ownerName: 'Mark Hussain',
-    email: 'mark@hussaincrafts.in',
+    ownerName: currentUser?.displayName || 'Mark Hussain',
+    email: currentUser?.email || 'mark@hussaincrafts.in',
     phone: '+91 98201 44521',
     role: 'Proprietor / Managing Director',
-    businessName: 'Shree Balaji Furniture Works',
+    businessName: businessName || 'Shree Balaji Furniture Works',
     tradeName: 'Hussain Crafts & Interiors',
     gstin: '27AABCS1429B1Z5',
     udyam: 'UDYAM-MH-12-0048291',
@@ -26,12 +28,18 @@ export default function ProfileSettingsPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
 
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      if (formData.ownerName && updateUserProfile) {
+        await updateUserProfile({ displayName: formData.ownerName });
+      }
+      if (formData.businessName && setBusiness) {
+        setBusiness(formData.businessName);
+      }
+
       recordAuditEvent({
         event: 'Business profile updated',
         actor: 'owner',
@@ -43,8 +51,18 @@ export default function ProfileSettingsPage() {
         description: 'Your business profile and threshold settings have been updated.',
         tone: 'healthy',
       });
-    }, 400);
+    } catch (err) {
+      console.error('Failed to update profile:', err);
+      toast({
+        title: 'Error updating profile',
+        description: 'Could not update your profile details. Please try again.',
+        tone: 'risk',
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
 
   return (
     <section className="space-y-8">

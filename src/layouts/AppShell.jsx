@@ -10,7 +10,7 @@ import {
   Waypoints,
 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import cn from '@/lib/cn';
 import CalculationLineage from '@/components/shared/CalculationLineage';
 import DisclaimerBar from '@/components/shared/DisclaimerBar';
@@ -18,6 +18,8 @@ import { Sheet, SheetBody, SheetContent, SheetDescription, SheetHeader, SheetTit
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LineageContext } from '@/hooks/useLineage';
 import { getLineage } from '@/mocks/api/lineage';
+import { useAuth } from '@/features/auth/AuthContext';
+import { useToast } from '@/components/shared/Toast';
 
 /**
  * Authenticated shell — expandable sidebar from PRD 3.4 & UI Refinement Guide,
@@ -83,6 +85,37 @@ export default function AppShell() {
 }
 
 function Sidebar({ expanded, onToggle }) {
+  const { currentUser, businessName, logout } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Mark Hussain';
+  const displayEmail = currentUser?.email || 'mark@hussaincrafts.in';
+
+  // Compute initials
+  const initials = useMemo(() => {
+    if (!displayName) return 'CT';
+    const parts = displayName.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return displayName.slice(0, 2).toUpperCase();
+  }, [displayName]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: 'Signed out',
+        description: 'You have been safely signed out of CashTwin.',
+        tone: 'healthy',
+      });
+      navigate('/login');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
+
   return (
     <aside
       aria-label="Main"
@@ -103,7 +136,9 @@ function Sidebar({ expanded, onToggle }) {
             {expanded ? (
               <div className="min-w-0 flex-1">
                 <p className="font-display text-sm font-bold text-chalk-hi truncate">CashTwin</p>
-                <p className="text-[10px] text-chalk-lo truncate font-mono uppercase">Hussain Crafts</p>
+                <p className="text-[10px] text-chalk-lo truncate font-mono uppercase">
+                  {businessName || 'Hussain Crafts'}
+                </p>
               </div>
             ) : null}
           </Link>
@@ -181,28 +216,33 @@ function Sidebar({ expanded, onToggle }) {
         <div className="flex items-center justify-between gap-2 px-1 py-1 rounded-lg bg-surface-2/60 border border-edge-dark/40">
           <div className="flex items-center gap-2.5 min-w-0 overflow-hidden">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-lime/20 border border-lime/40 text-lime font-display font-bold text-xs">
-              MH
+              {initials}
             </div>
             {expanded ? (
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-chalk-hi truncate">Mark Hussain</p>
-                <p className="text-[10px] text-chalk-lo truncate font-mono">Owner</p>
+                <p className="text-xs font-semibold text-chalk-hi truncate">{displayName}</p>
+                <p className="text-[10px] text-chalk-lo truncate font-mono" title={displayEmail}>
+                  {displayEmail}
+                </p>
               </div>
             ) : null}
           </div>
 
-          <Link
-            to="/"
+          <button
+            type="button"
+            onClick={handleLogout}
             className="flex h-6 w-6 shrink-0 items-center justify-center text-chalk-lo hover:text-risk transition-colors"
-            title="Exit to marketing site"
+            title="Sign out of CashTwin"
+            aria-label="Sign out of CashTwin"
           >
             <LogOut className="h-3.5 w-3.5" />
-          </Link>
+          </button>
         </div>
       </div>
     </aside>
   );
 }
+
 
 function LineageDrawer({ open, onOpenChange, lineage }) {
   return (
