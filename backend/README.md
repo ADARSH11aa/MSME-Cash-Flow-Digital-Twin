@@ -10,25 +10,19 @@ translated or approximated, and why.
 
 ## Run it
 
-1. Start Model 1/2/5/7/8's server (required — nearly everything here calls
-   into it):
+1. Start the AI server — every model (1–8) is served from this one process
+   on this one port:
    ```
    cd AI_models
    .venv/Scripts/python -m uvicorn main:app --port 8000
    ```
-2. (Optional) Start Model 3's server, for anomaly-enriched risk-graph nodes —
-   the graph still builds without it, just without `anomaly_type` detail:
-   ```
-   cd AI_models
-   .venv/Scripts/python -m uvicorn api.anomaly_api:app --port 8002
-   ```
-3. Start this gateway:
+2. Start this gateway:
    ```
    cd backend
    npm install
    npm start
    ```
-4. Point the frontend at it — `frontend/.env.local`:
+3. Point the frontend at it — `frontend/.env.local`:
    ```
    VITE_API_BASE_URL=http://localhost:9000
    ```

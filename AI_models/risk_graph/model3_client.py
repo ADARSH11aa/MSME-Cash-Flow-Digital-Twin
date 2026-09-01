@@ -10,7 +10,7 @@ import pandas as pd
 import requests
 
 
-def load_anomaly_flags(api_url="http://127.0.0.1:8002/detect-anomalies/open", timeout=30) -> pd.DataFrame:
+def load_anomaly_flags(api_url="http://127.0.0.1:8000/detect-anomalies/open", timeout=30) -> pd.DataFrame:
     """
     Returns a DataFrame of invoice_id + anomaly_type, ONE ROW PER FLAGGED
     INVOICE ONLY - Model 3's endpoint only returns flagged invoices (see

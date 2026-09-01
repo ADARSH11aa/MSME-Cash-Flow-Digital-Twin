@@ -1,11 +1,11 @@
 /**
  * Gateway backend for the CashTwin frontend.
  *
- * Requires Model 1's server running first (AI_models/main.py, port 8000) -
+ * Requires the AI server running first (AI_models/main.py, port 8000) -
  * everything here calls into it for payment predictions, Monte Carlo
- * simulation, recommendation ranking, risk-graph building and SHAP
- * explanations. Model 3's server (AI_models/api/anomaly_api.py, port 8002)
- * is optional; the risk graph degrades gracefully without it.
+ * simulation, anomaly detection, recommendation ranking, risk-graph
+ * building and SHAP explanations. All eight models are served from that
+ * one process; there is no second port to start.
  *
  * Run:
  *   cd AI_models && .venv/Scripts/python -m uvicorn main:app --port 8000

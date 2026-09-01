@@ -1,3 +1,23 @@
+---
+title: CashTwin AI Layer
+emoji: 📊
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
+<!--
+The YAML block above is required by Hugging Face Spaces (Docker SDK) and is
+ignored everywhere else. app_port must match the Dockerfile's PORT/EXPOSE:
+main.py builds its own loopback self-call URLs from $PORT, so a mismatch
+makes /risk-graph fail-soft to anomaly_type "normal" instead of erroring.
+
+GROQ_API_KEY must be set as a Space *Secret*, never committed - Spaces on
+the free tier are public repositories.
+-->
+
 # AI Models & Intelligence Layer  
 ## MSME Cash-Flow Digital Twin
 

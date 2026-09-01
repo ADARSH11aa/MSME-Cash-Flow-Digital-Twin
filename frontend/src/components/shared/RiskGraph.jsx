@@ -267,7 +267,15 @@ function computeLayout(nodes, edges) {
         // cutting diagonally across neighbouring nodes.
         path: `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`,
         labelX: (x1 + x2) / 2,
-        labelY: midY + 3,
+        // Sit in the RANK_GAP directly ABOVE the target row, not at the
+        // edge's midpoint. For an edge between adjacent ranks the two are
+        // the same point, so this changes nothing for almost every edge.
+        // It matters for expense -> buffer, which skips the invoice rank:
+        // its midpoint lands on an invoice node and prints "reduces cash
+        // buffer" through that node's anomaly badge. Anchoring to the
+        // target also keeps it clear of the source row's own labels, which
+        // all sit one gap below their shared source rank.
+        labelY: y2 - RANK_GAP / 2 + 3,
       };
     })
     .filter(Boolean);
