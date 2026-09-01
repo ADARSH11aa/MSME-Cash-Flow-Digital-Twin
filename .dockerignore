@@ -1,0 +1,41 @@
+# Build context for the combined backend+AI_models Dockerfile (repo root).
+# Not used by the frontend (deployed separately on Vercel) or by
+# AI_models/Dockerfile (which has its own .dockerignore for a standalone
+# AI-only image).
+
+frontend/
+.git/
+.claude/
+.gitignore
+*.md
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Secrets / local state
+.env
+.env.*
+
+# Training-time only - not imported by the serving path.
+AI_models/notebook/
+AI_models/tests/
+AI_models/data/processed/
+AI_models/evaluation/
+
+# Local scratch output
+AI_models/*.joblib.bak
+AI_models/forecast_test*.json
+AI_models/model3_output.json
+AI_models/model_2_input.json
+AI_models/model_7_output.json
+AI_models/riskgraph_test.json
+AI_models/invoices.csv.backup
+AI_models/data/raw/invoices.csv.backup

@@ -6,6 +6,10 @@ Also exposes:
     Model 2:
         POST /simulate
 
+    Model 3:
+        GET  /detect-anomalies/closed
+        GET  /detect-anomalies/open
+
     Model 4:
         POST /extract/invoice
 
@@ -27,6 +31,12 @@ backend gateway - they're exposed here as plain HTTP endpoints instead so
 the gateway (backend/, now Node/Express) never needs to import any
 AI_models Python code directly, only call it over HTTP like it already
 does for Model 1/4/5.
+
+Model 3 used to be a SECOND server on port 8002 that you had to remember
+to start by hand - and when you forgot, /risk-graph silently fail-softed
+to anomaly_type "normal" everywhere, so Model 3's findings just never
+reached the UI. It's mounted here now: one process, one port, nothing
+optional to forget before a demo.
 
 Run from the app/ directory:
 
@@ -61,6 +71,8 @@ from ocr_extraction import extract_invoice
 from simulation.monte_carlo import simulate_cashflow
 from risk_graph.build_risk_graph import build_risk_graph
 from model_7 import rank_recovery_options
+
+from api.anomaly_api import router as anomaly_router
 
 # Model 6 builds its Groq client at import time, which raises if GROQ_API_KEY
 # is unset. Narration is the one optional model here - every other endpoint
@@ -105,11 +117,14 @@ RAW_INVOICES_PATH = Path(
     )
 )
 
-# Model 3's server is optional (see build_risk_graph's own fail-soft
-# handling) and Model 5 lives on this same app - no MODEL1_DATA_PATH-style
-# override needed since nothing outside this process calls these directly.
+# Models 3 and 5 both live on THIS app now, so /risk-graph reaches them by
+# calling this same process over HTTP - the pattern already used below for
+# /predict/open-invoices and /explain/invoices. Sync `def` endpoints run in
+# the threadpool, so a self-call is served on another thread rather than
+# deadlocking the one waiting on it.
 MODEL3_URL = os.environ.get(
-    "MODEL3_URL", "http://127.0.0.1:8002/detect-anomalies/open"
+    "MODEL3_URL",
+    f"http://127.0.0.1:{os.environ.get('PORT', 8000)}/detect-anomalies/open",
 )
 
 
@@ -120,6 +135,10 @@ MODEL3_URL = os.environ.get(
 app = FastAPI(
     title="MSME Cash-Flow AI - Model 1 API",
 )
+
+# Model 3 (anomaly detection). Its own /health is deliberately left behind
+# on its standalone app - this app already has one.
+app.include_router(anomaly_router)
 
 
 # ============================================================

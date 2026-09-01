@@ -46,6 +46,9 @@ $RECYCLE.BIN/
 coverage
 graphify-out/
 
+# Claude Code local agent state - never part of the deployed project
+.claude/
+
 # Runtime-generated data backups — routes/data.js rewrites these on every CSV
 # upload, so tracking them makes any upload dirty the working tree.
 *.csv.backup

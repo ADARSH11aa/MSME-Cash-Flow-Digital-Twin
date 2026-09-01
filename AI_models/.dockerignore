@@ -1,0 +1,29 @@
+# Never let secrets or local state into the image. HF Spaces repos are
+# PUBLIC on the free tier - GROQ_API_KEY belongs in Space Secrets, which
+# arrive as environment variables, not in a committed .env.
+.env
+.env.*
+
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Training-time only - not imported by the serving path.
+notebook/
+tests/
+data/processed/
+
+# Local scratch output
+*.joblib.bak
+forecast_test*.json
+model3_output.json
+model_7_output.json
+riskgraph_test.json
+model_2_input.json
+invoices.csv.backup
+data/raw/invoices.csv.backup
+
+.git/
+.gitignore

@@ -1,0 +1,20 @@
+# Controls what gets uploaded to Cloud Build as source (separate from
+# .dockerignore, which controls what the Docker build itself sees once
+# uploaded). Without this, `gcloud builds submit` falls back to the root
+# .gitignore, which does not know about AI_models/.venv/ (735MB, nested
+# .gitignore not consulted) - that alone makes the difference between a
+# ~60MB upload and a multi-hundred-MB one.
+.git/
+.gcloudignore
+.claude/
+
+frontend/node_modules/
+frontend/dist/
+backend/node_modules/
+AI_models/.venv/
+AI_models/__pycache__/
+
+AI_models/notebook/
+AI_models/tests/
+AI_models/data/processed/
+AI_models/evaluation/

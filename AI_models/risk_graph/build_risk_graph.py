@@ -51,7 +51,7 @@ def build_risk_graph(
     horizon_days=90,
     raw_invoices_path="data/raw/invoices.csv",
     model1_api_url="http://127.0.0.1:8000/predict/open-invoices",
-    model3_api_url="http://127.0.0.1:8002/detect-anomalies/open",
+    model3_api_url="http://127.0.0.1:8000/detect-anomalies/open",
     model5_api_url="http://127.0.0.1:8000/explain/invoices",
     min_buffer=0,
     scope="overdue",  # "overdue" = only invoices past their own P90 | "all" = every open invoice
